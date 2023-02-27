@@ -5,28 +5,14 @@ if (DID_API.key == '🤫') alert('Please put your api key inside ./api.json and 
 
 const RTCPeerConnection = (window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection).bind(window);
 
-// const env = process.env.NODE_ENV;
-
 let peerConnection;
 let streamId;
 let sessionId;
 let sessionClientAnswer;
 
-//TODO adjust to your liking
-const talkData = {
-  'script': {
-    'type': 'audio',
-    'audio_url': 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
-  },
-  'driver_url': 'bank://lively/',
-  'config': {
-    'stitch': true,
-  }
-}
 
 const talkVideo = document.getElementById('talk-video');
 talkVideo.setAttribute('playsinline', '');
-
 const instanceIdLabel = document.getElementById('instance-label');
 const peerStatusLabel = document.getElementById('peer-status-label');
 const iceStatusLabel = document.getElementById('ice-status-label');
@@ -42,7 +28,7 @@ connectButton.onclick = async () => {
   stopAllStreams();
   closePC();
 
-  const sessionResponse = await fetch(DID_API.url, {
+  const sessionResponse = await fetch(`${DID_API.url}/talks/streams`, {
     method: 'POST',
     headers: {'Authorization': `Basic ${DID_API.key}`, 'Content-Type': 'application/json'},
     body: JSON.stringify({
@@ -65,7 +51,7 @@ connectButton.onclick = async () => {
     return;
   }
 
-  const sdpResponse = await fetch(`${DID_API.url}/${streamId}/sdp`,
+  const sdpResponse = await fetch(`${DID_API.url}/talks/streams/${streamId}/sdp`,
     {
       method: 'POST',
       headers: {Authorization: `Basic ${DID_API.key}`, 'Content-Type': 'application/json'},
@@ -77,18 +63,27 @@ const talkButton = document.getElementById('talk-button');
 talkButton.onclick = async () => {
   // connectionState not supported in firefox
   if (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') {
-    const talkResponse = await fetch(`${DID_API.url}/${streamId}`,
+    const talkResponse = await fetch(`${DID_API.url}/talks/streams/${streamId}`,
       {
         method: 'POST',
-        headers: {Authorization: `Basic ${DID_API.key}`, 'Content-Type': 'application/json'},
-        body: JSON.stringify({...talkData, session_id: sessionId})
+        headers: { Authorization: `Basic ${DID_API.key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          'script': {
+            'type': 'audio',
+            'audio_url': 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
+          },
+          'driver_url': 'bank://lively/',
+          'config': {
+            'stitch': true,
+          },
+          'session_id': sessionId
+        })
       });
-  }
-};
+  }};
 
 const destroyButton = document.getElementById('destroy-button');
 destroyButton.onclick = async () => {
-  await fetch(`${DID_API.url}/${streamId}`,
+  await fetch(`${DID_API.url}/talks/streams/${streamId}`,
     {
       method: 'DELETE',
       headers: {Authorization: `Basic ${DID_API.key}`, 'Content-Type': 'application/json'},
@@ -108,7 +103,7 @@ function onIceCandidate(event) {
   if (event.candidate) {
     const { candidate, sdpMid, sdpMLineIndex } = event.candidate;
     
-    fetch(`${DID_API.url}/${streamId}/ice`,
+    fetch(`${DID_API.url}/talks/streams/${streamId}/ice`,
       {
         method: 'POST',
         headers: {Authorization: `Basic ${DID_API.key}`, 'Content-Type': 'application/json'},
