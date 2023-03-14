@@ -13,7 +13,6 @@ let sessionClientAnswer;
 
 const talkVideo = document.getElementById('talk-video');
 talkVideo.setAttribute('playsinline', '');
-const instanceIdLabel = document.getElementById('instance-label');
 const peerStatusLabel = document.getElementById('peer-status-label');
 const iceStatusLabel = document.getElementById('ice-status-label');
 const iceGatheringStatusLabel = document.getElementById('ice-gathering-status-label');
@@ -37,10 +36,9 @@ connectButton.onclick = async () => {
   });
 
   
-  const { streamId: newStreamId, offer, iceServers, instanceId, session_id: newSessionId } = await sessionResponse.json()
+  const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = await sessionResponse.json()
   streamId = newStreamId;
   sessionId = newSessionId;
-  instanceIdLabel.innerText = instanceId;
   
   try {
     sessionClientAnswer = await createPeerConnection(offer, iceServers);
@@ -186,7 +184,6 @@ function closePC(pc = peerConnection) {
   pc.removeEventListener('track', onTrack, true);
   iceGatheringStatusLabel.innerText = '';
   signalingStatusLabel.innerText = '';
-  instanceIdLabel.innerText = '';
   iceStatusLabel.innerText = '';
   peerStatusLabel.innerText = '';
   console.log('stopped peer connection');
