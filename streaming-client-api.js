@@ -1,8 +1,7 @@
 'use strict';
 import DID_API from './api.json' assert { type: 'json' };
 
-if (DID_API.key == '🤫')
-  alert('Please put your api key inside ./api.json and restart..');
+if (DID_API.key == '🤫') alert('Please put your api key inside ./api.json and restart..');
 
 const RTCPeerConnection = (
   window.RTCPeerConnection ||
@@ -23,9 +22,7 @@ const talkVideo = document.getElementById('talk-video');
 talkVideo.setAttribute('playsinline', '');
 const peerStatusLabel = document.getElementById('peer-status-label');
 const iceStatusLabel = document.getElementById('ice-status-label');
-const iceGatheringStatusLabel = document.getElementById(
-  'ice-gathering-status-label'
-);
+const iceGatheringStatusLabel = document.getElementById('ice-gathering-status-label');
 const signalingStatusLabel = document.getElementById('signaling-status-label');
 const streamingStatusLabel = document.getElementById('streaming-status-label');
 
@@ -38,26 +35,18 @@ connectButton.onclick = async () => {
   stopAllStreams();
   closePC();
 
-  const sessionResponse = await fetchWithRetries(
-    `${DID_API.url}/talks/streams`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${DID_API.key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
-      }),
-    }
-  );
+  const sessionResponse = await fetchWithRetries(`${DID_API.url}/talks/streams`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${DID_API.key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
+    }),
+  });
 
-  const {
-    id: newStreamId,
-    offer,
-    ice_servers: iceServers,
-    session_id: newSessionId,
-  } = await sessionResponse.json();
+  const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = await sessionResponse.json();
   streamId = newStreamId;
   sessionId = newSessionId;
 
@@ -70,51 +59,41 @@ connectButton.onclick = async () => {
     return;
   }
 
-  const sdpResponse = await fetch(
-    `${DID_API.url}/talks/streams/${streamId}/sdp`,
-    {
+  const sdpResponse = await fetch(`${DID_API.url}/talks/streams/${streamId}/sdp`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${DID_API.key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      answer: sessionClientAnswer,
+      session_id: sessionId,
+    }),
+  });
+};
+
+const talkButton = document.getElementById('talk-button');
+talkButton.onclick = async () => {
+  // connectionState not supported in firefox
+  if (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') {
+    const talkResponse = await fetchWithRetries(`${DID_API.url}/talks/streams/${streamId}`, {
       method: 'POST',
       headers: {
         Authorization: `Basic ${DID_API.key}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        answer: sessionClientAnswer,
+        script: {
+          type: 'audio',
+          audio_url: 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
+        },
+        driver_url: 'bank://lively/',
+        config: {
+          stitch: true,
+        },
         session_id: sessionId,
       }),
-    }
-  );
-};
-
-const talkButton = document.getElementById('talk-button');
-talkButton.onclick = async () => {
-  // connectionState not supported in firefox
-  if (
-    peerConnection?.signalingState === 'stable' ||
-    peerConnection?.iceConnectionState === 'connected'
-  ) {
-    const talkResponse = await fetchWithRetries(
-      `${DID_API.url}/talks/streams/${streamId}`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${DID_API.key}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          script: {
-            type: 'audio',
-            audio_url:
-              'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
-          },
-          driver_url: 'bank://lively/',
-          config: {
-            stitch: true,
-          },
-          session_id: sessionId,
-        }),
-      }
-    );
+    });
   }
 };
 
@@ -135,8 +114,7 @@ destroyButton.onclick = async () => {
 
 function onIceGatheringStateChange() {
   iceGatheringStatusLabel.innerText = peerConnection.iceGatheringState;
-  iceGatheringStatusLabel.className =
-    'iceGatheringState-' + peerConnection.iceGatheringState;
+  iceGatheringStatusLabel.className = 'iceGatheringState-' + peerConnection.iceGatheringState;
 }
 function onIceCandidate(event) {
   console.log('onIceCandidate', event);
@@ -160,12 +138,8 @@ function onIceCandidate(event) {
 }
 function onIceConnectionStateChange() {
   iceStatusLabel.innerText = peerConnection.iceConnectionState;
-  iceStatusLabel.className =
-    'iceConnectionState-' + peerConnection.iceConnectionState;
-  if (
-    peerConnection.iceConnectionState === 'failed' ||
-    peerConnection.iceConnectionState === 'closed'
-  ) {
+  iceStatusLabel.className = 'iceConnectionState-' + peerConnection.iceConnectionState;
+  if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'closed') {
     stopAllStreams();
     closePC();
   }
@@ -173,13 +147,11 @@ function onIceConnectionStateChange() {
 function onConnectionStateChange() {
   // not supported in firefox
   peerStatusLabel.innerText = peerConnection.connectionState;
-  peerStatusLabel.className =
-    'peerConnectionState-' + peerConnection.connectionState;
+  peerStatusLabel.className = 'peerConnectionState-' + peerConnection.connectionState;
 }
 function onSignalingStateChange() {
   signalingStatusLabel.innerText = peerConnection.signalingState;
-  signalingStatusLabel.className =
-    'signalingState-' + peerConnection.signalingState;
+  signalingStatusLabel.className = 'signalingState-' + peerConnection.signalingState;
 }
 
 function onVideoStatusChange(videoIsPlaying, stream) {
@@ -203,8 +175,7 @@ function onTrack(event) {
     const stats = await peerConnection.getStats(event.track);
     stats.forEach((report) => {
       if (report.type === 'inbound-rtp' && report.mediaType === 'video') {
-        const videoStatusChanged =
-          videoIsPlaying !== report.bytesReceived > lastBytesReceived;
+        const videoStatusChanged = videoIsPlaying !== report.bytesReceived > lastBytesReceived;
 
         if (videoStatusChanged) {
           videoIsPlaying = report.bytesReceived > lastBytesReceived;
@@ -219,27 +190,11 @@ function onTrack(event) {
 async function createPeerConnection(offer, iceServers) {
   if (!peerConnection) {
     peerConnection = new RTCPeerConnection({ iceServers });
-    peerConnection.addEventListener(
-      'icegatheringstatechange',
-      onIceGatheringStateChange,
-      true
-    );
+    peerConnection.addEventListener('icegatheringstatechange', onIceGatheringStateChange, true);
     peerConnection.addEventListener('icecandidate', onIceCandidate, true);
-    peerConnection.addEventListener(
-      'iceconnectionstatechange',
-      onIceConnectionStateChange,
-      true
-    );
-    peerConnection.addEventListener(
-      'connectionstatechange',
-      onConnectionStateChange,
-      true
-    );
-    peerConnection.addEventListener(
-      'signalingstatechange',
-      onSignalingStateChange,
-      true
-    );
+    peerConnection.addEventListener('iceconnectionstatechange', onIceConnectionStateChange, true);
+    peerConnection.addEventListener('connectionstatechange', onConnectionStateChange, true);
+    peerConnection.addEventListener('signalingstatechange', onSignalingStateChange, true);
     peerConnection.addEventListener('track', onTrack, true);
   }
 
@@ -287,22 +242,10 @@ function closePC(pc = peerConnection) {
   if (!pc) return;
   console.log('stopping peer connection');
   pc.close();
-  pc.removeEventListener(
-    'icegatheringstatechange',
-    onIceGatheringStateChange,
-    true
-  );
+  pc.removeEventListener('icegatheringstatechange', onIceGatheringStateChange, true);
   pc.removeEventListener('icecandidate', onIceCandidate, true);
-  pc.removeEventListener(
-    'iceconnectionstatechange',
-    onIceConnectionStateChange,
-    true
-  );
-  pc.removeEventListener(
-    'connectionstatechange',
-    onConnectionStateChange,
-    true
-  );
+  pc.removeEventListener('iceconnectionstatechange', onIceConnectionStateChange, true);
+  pc.removeEventListener('connectionstatechange', onConnectionStateChange, true);
   pc.removeEventListener('signalingstatechange', onSignalingStateChange, true);
   pc.removeEventListener('track', onTrack, true);
   clearInterval(statsIntervalId);
