@@ -1,6 +1,6 @@
 "use strict";
-
 import DID_API from "./api.json" assert { type: "json" };
+
 if (DID_API.key == "🤫")
   alert("Please put your api key inside ./api.json and restart..");
 
@@ -38,16 +38,19 @@ connectButton.onclick = async () => {
   stopAllStreams();
   closePC();
 
-  const sessionResponse = await fetch(`${DID_API.url}/talks/streams`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${DID_API.key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      source_url: "https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg",
-    }),
-  });
+  const sessionResponse = await fetchWithRetries(
+    `${DID_API.url}/talks/streams`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${DID_API.key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        source_url: "https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg",
+      }),
+    }
+  );
 
   const {
     id: newStreamId,
@@ -90,7 +93,7 @@ talkButton.onclick = async () => {
     peerConnection?.signalingState === "stable" ||
     peerConnection?.iceConnectionState === "connected"
   ) {
-    const talkResponse = await fetch(
+    const talkResponse = await fetchWithRetries(
       `${DID_API.url}/talks/streams/${streamId}`,
       {
         method: "POST",
@@ -310,5 +313,20 @@ function closePC(pc = peerConnection) {
   console.log("stopped peer connection");
   if (pc === peerConnection) {
     peerConnection = null;
+  }
+}
+
+const maxRetryCount = 3;
+
+async function fetchWithRetries(url, options, retries = 1) {
+  try {
+    return await fetch(url, options);
+  } catch (err) {
+    if (retries <= maxRetryCount) {
+      console.log(`Request failed, retrying ${retries}/${maxRetryCount}`);
+      return fetchWithRetries(url, options, retries + 1);
+    } else {
+      throw new Error(`Max retries exceeded. error: ${err}`);
+    }
   }
 }
