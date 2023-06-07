@@ -169,6 +169,13 @@ function onVideoStatusChange(videoIsPlaying, stream) {
 }
 
 function onTrack(event) {
+  /**
+   * The following code is designed to provide information about wether currently there is data
+   * that's being streamed - It does so by periodically looking for changes in total stream data size
+   *
+   * This information in our case is used in order to show idle video while no talk is streaming.
+   */
+
   if (!event.track) return;
 
   statsIntervalId = setInterval(async () => {
@@ -260,13 +267,18 @@ function closePC(pc = peerConnection) {
 }
 
 const maxRetryCount = 3;
+const maxDelaySec = 4;
 
 async function fetchWithRetries(url, options, retries = 1) {
   try {
     return await fetch(url, options);
   } catch (err) {
     if (retries <= maxRetryCount) {
-      console.log(`Request failed, retrying ${retries}/${maxRetryCount}`);
+      const delay = Math.min(Math.pow(2, retries) / 4 + Math.random(), maxDelaySec) * 1000;
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
+      console.log(`Request failed, retrying ${retries}/${maxRetryCount}. Error ${err}`);
       return fetchWithRetries(url, options, retries + 1);
     } else {
       throw new Error(`Max retries exceeded. error: ${err}`);
