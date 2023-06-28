@@ -234,7 +234,7 @@ const askChatGPT = async (q) => {
       }
     ],
     "temperature": 0.7,
-    "model": "gpt4all-j",
+    "model": "gpt-3.5-turbo",
     "max_tokens": 650,
     "top_p": 1,
     "frequency_penalty": 0,
