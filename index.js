@@ -1,1 +1,1 @@
-import './streaming-client-api.js';
+import './streaming-client-local-api.js';
