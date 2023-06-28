@@ -1,6 +1,6 @@
 'use strict';
 
-const OPENAI_API_KEY = "sk-SoTDJTGQamBDvBugOprRT3BlbkFJOo7uv1KTzeefPxRUjUEmxxxxxxxxx";
+const OPENAI_API_KEY = "sk-xxx";
 const DID_API_KEY = "YzJodmRHVnNRR2R0WVdsc0xtTnZiUTp2LU9LU1FpSXVNdDJZQWZqMWk0Umg="
 // My Key below
 // const DID_API_KEY = "dGltLmphY2tzb25AdGhvdWdodGxhYnMuY28ubno:M8y6Rr00rRPuClsZfGRRL";

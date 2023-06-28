@@ -1,6 +1,6 @@
 'use strict';
 
-const OPENAI_API_KEY = "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";
+const OPENAI_API_KEY = "sk-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";
 const DID_API_KEY = "YzJodmRHVnNRR2R0WVdsc0xtTnZiUTp2LU9LU1FpSXVNdDJZQWZqMWk0Umg=";
 const DID_URL = "https://api.d-id.com";
 
