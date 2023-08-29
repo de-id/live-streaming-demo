@@ -174,6 +174,9 @@ function onTrack(event) {
    * that's being streamed - It does so by periodically looking for changes in total stream data size
    *
    * This information in our case is used in order to show idle video while no talk is streaming.
+   * To create this idle video use the POST https://api.d-id.com/talks endpoint with a silent audio file or a text script with only ssml breaks 
+   * https://docs.aws.amazon.com/polly/latest/dg/supportedtags.html#break-tag
+   * for seamless results use `config.fluent: true` and provide the same configuration as the streaming video
    */
 
   if (!event.track) return;
