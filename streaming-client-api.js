@@ -17,6 +17,7 @@ let sessionClientAnswer;
 let statsIntervalId;
 let videoIsPlaying;
 let lastBytesReceived;
+let lastTalkStartedMillis;
 
 const talkVideo = document.getElementById('talk-video');
 talkVideo.setAttribute('playsinline', '');
@@ -76,6 +77,7 @@ const talkButton = document.getElementById('talk-button');
 talkButton.onclick = async () => {
   // connectionState not supported in firefox
   if (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') {
+    lastTalkStartedMillis = performance.now();
     const talkResponse = await fetchWithRetries(`${DID_API.url}/talks/streams/${streamId}`, {
       method: 'POST',
       headers: {
@@ -94,6 +96,9 @@ talkButton.onclick = async () => {
         session_id: sessionId,
       }),
     });
+    console.log(`talk API response latency: ${(performance.now() - lastTalkStartedMillis).toFixed(0)} ms`);
+  } else {
+    console.warn('talk button clicked before connection was established');
   }
 };
 
@@ -117,7 +122,7 @@ function onIceGatheringStateChange() {
   iceGatheringStatusLabel.className = 'iceGatheringState-' + peerConnection.iceGatheringState;
 }
 function onIceCandidate(event) {
-  console.log('onIceCandidate', event);
+  console.log('onIceCandidate', event.candidate);
   if (event.candidate) {
     const { candidate, sdpMid, sdpMLineIndex } = event.candidate;
 
@@ -160,6 +165,7 @@ function onVideoStatusChange(videoIsPlaying, stream) {
     status = 'streaming';
     const remoteStream = stream;
     setVideoElement(remoteStream);
+    console.log(`video streaming latency: ${(performance.now() - lastTalkStartedMillis).toFixed(0)} ms`);
   } else {
     status = 'empty';
     playIdleVideo();
@@ -174,7 +180,7 @@ function onTrack(event) {
    * that's being streamed - It does so by periodically looking for changes in total stream data size
    *
    * This information in our case is used in order to show idle video while no talk is streaming.
-   * To create this idle video use the POST https://api.d-id.com/talks endpoint with a silent audio file or a text script with only ssml breaks 
+   * To create this idle video use the POST https://api.d-id.com/talks endpoint with a silent audio file or a text script with only ssml breaks
    * https://docs.aws.amazon.com/polly/latest/dg/supportedtags.html#break-tag
    * for seamless results use `config.fluent: true` and provide the same configuration as the streaming video
    */
@@ -194,7 +200,7 @@ function onTrack(event) {
         lastBytesReceived = report.bytesReceived;
       }
     });
-  }, 500);
+  }, 100);
 }
 
 async function createPeerConnection(offer, iceServers) {
