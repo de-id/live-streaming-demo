@@ -1,14 +1,30 @@
+//working with openAI but not streaming back the Avatar - only sreams back voice with the answer with still image 
+//node app.js C:\Projects\DID\streams_Oct>node app.js
+//http://localhost:3000/
+//Same output chrome or edge browser -- shows streaming in status as plays voice response
+
 'use strict';
 import DID_API from './api.json' assert { type: 'json' };
 
-if (DID_API.key == '🤫') alert('Please put your api key inside ./api.json and restart..');
+if (DID_API.key == '🤫') alert('Please put your API key inside ./api.json and restart.');
+
+// Load the OpenAI API from file new 10/23 
+let OPENAI_API_KEY;
+fetch('./config.json')
+  .then((response) => response.json())
+  .then(async (config) => {
+    OPENAI_API_KEY = config.OPENAI_API_KEY;
+  })
+  .catch((error) => {
+    console.error('Error loading config.json:', error);
+  });
 
 // OpenAI API endpoint set up new 10/23 
 async function fetchOpenAIResponse(userMessage) {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${DID_API.chat}`,
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -25,7 +41,8 @@ async function fetchOpenAIResponse(userMessage) {
   const data = await response.json();
   return data.choices[0].message.content.trim();
 }
-
+  
+//same  - No edits from Github example for this whole section
 const RTCPeerConnection = (
   window.RTCPeerConnection ||
   window.webkitRTCPeerConnection ||
@@ -65,8 +82,7 @@ connectButton.onclick = async () => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-    /*  source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg', */
-      source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Noelle_f/image.jpeg',
+      source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
     }),
   });
 
@@ -96,6 +112,7 @@ connectButton.onclick = async () => {
   });
 };
 
+// This is changed to accept the ChatGPT response as Text input to D-ID
 const talkButton = document.getElementById('talk-button');
 talkButton.onclick = async () => {
   if (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') {
@@ -107,40 +124,46 @@ talkButton.onclick = async () => {
     // Print the openAIResponse to the console
     console.log("OpenAI Response:", responseFromOpenAI);
     //
-
-    const talkResponse = await fetchWithRetries(`${DID_API.url}/talks/streams/${streamId}`, {
+    const talkResponse = await fetch(`${DID_API.url}/talks/streams/${streamId}`, {
       method: 'POST',
-      headers: {
-        Authorization: `Basic ${DID_API.key}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 
+        Authorization: `Basic ${DID_API.key}`, 
+        'Content-Type': 'application/json'
+     },
       body: JSON.stringify({
         script: {
-        /*  type: 'audio',
-          audio_url: 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3', */
           type: 'text',
-          subtitles: false,
-          
-         provider: {
-            type: 'microsoft',
-            voice_id: 'es-AR-ElenaNeural' 
-          },
+          subtitles: 'false',
+          provider: { type: 'microsoft', voice_id: 'en-US-ChristopherNeural' },
+          ssml: false,
+          //send the openAIResponse to D-id
           input: responseFromOpenAI
         },
-           
         config: {
           fluent: true,
-          path_audio: "0.0",
-  /*        auto_match: true,
-          normalization_factor: 1, 
-          stitch: true, */
+          pad_audio: 0,
+          driver_expressions: {
+            expressions: [{ expression: 'neutral', start_frame: 0, intensity: 0 }],
+            transition_frames: 0
+          },
+          align_driver: true,
+          align_expand_factor: 0,
+          auto_match: true,
+          motion_factor: 0,
+          normalization_factor: 0,
+          sharpen: true,
+          stitch: true,
+          result_format: 'mp4'
         },
+        driver_url: 'bank://lively/',
         session_id: sessionId,
-      }
-    )
+      }),
+    });
   }
-)}
-}
+};
+
+// NOTHING BELOW THIS LINE IS CHANGED FROM ORIGNAL D-id File Example
+//
 
 const destroyButton = document.getElementById('destroy-button');
 destroyButton.onclick = async () => {
@@ -281,8 +304,7 @@ function setVideoElement(stream) {
 
 function playIdleVideo() {
   talkVideo.srcObject = undefined;
-  /* talkVideo.src = 'or_idle.mp4'; */
-  talkVideo.src = 'otro_idle.mp4';
+  talkVideo.src = 'or_idle.mp4';
   talkVideo.loop = true;
 }
 
