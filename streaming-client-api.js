@@ -133,6 +133,10 @@ talkButton.onclick = async () => {
           path_audio: "0.0",
           align_driver: true,
           auto_match: true,
+          driver_expressions: {
+            expressions: [{ expression: 'neutral', start_frame: 0, intensity: 0 }],
+            transition_frames: 0
+          },
   /*        auto_match: true,
           normalization_factor: 1, 
           stitch: true, */
