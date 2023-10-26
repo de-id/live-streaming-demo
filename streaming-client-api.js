@@ -131,10 +131,13 @@ talkButton.onclick = async () => {
         config: {
           fluent: true,
           path_audio: "0.0",
+          align_driver: true,
+          auto_match: true,
   /*        auto_match: true,
           normalization_factor: 1, 
           stitch: true, */
         },
+        driver_url: 'bank://lively/',
         session_id: sessionId,
       }
     )
