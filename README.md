@@ -3,6 +3,11 @@
 ## Initial Setup:
 * (install express) open a terminal in the folder and run  - npm install express
 * (add your api key) edit the `api.json` inside the uncompressed folder and replace the emoji with your key
+Te api.json has tree elements
+
+"key": "DID key",
+"url": "https://api.d-id.com",
+"chat": "chatGPT Key"
 
 
 ## Start the demo:
