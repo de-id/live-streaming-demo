@@ -23,7 +23,7 @@
  export const run = async () => {
      //Instantiante the OpenAI model 
      //Pass the "temperature" parameter which controls the RANDOMNESS of the model's output. A lower temperature will result in more predictable output, while a higher temperature will result in more random output. The temperature parameter is set between 0 and 1, with 0 being the most predictable and 1 being the most random
-     const model = new OpenAI({ temperature: 0.9 });
+     const model = new OpenAI({ temperature: 0.0 });
 
      //Create the template. The template is actually a "parameterized prompt". A "parameterized prompt" is a prompt in which the input parameter names are used and the parameter values are supplied from external input 
      const template = "What is a good name for a company that makes {product}?";
