@@ -1,0 +1,16 @@
+{
+  "name": "live-streaming-demo",
+  "version": "1.0.0",
+  "description": "* (install express) open a terminal in the folder and run  - npm install express\r * (add your api key) edit the `api.json` inside the uncompressed folder and replace the emoji with your key\r Te api.json has tree elements",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node --esm ./langchainjs-tutorial-1/src/app.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "source-map-loader": "^4.0.1",
+    "ts-loader": "^9.5.0"
+  }
+}

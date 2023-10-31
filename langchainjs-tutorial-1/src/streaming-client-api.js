@@ -1,5 +1,6 @@
 'use strict';
 import DID_API from './api.json' assert { type: 'json' };
+import lc from 'langchain';
 
 if (DID_API.key == '🤫') alert('Please put your api key inside ./api.json and restart..');
 
@@ -14,7 +15,7 @@ async function fetchOpenAIResponse(userMessage) {
     body: JSON.stringify({
       model: "gpt-3.5-turbo",
       messages: [{role: "user", content: userMessage}],
-      temperature: 0.7,
+      temperature: 0.0,
       max_tokens: 15
     }),
   });
