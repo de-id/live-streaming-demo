@@ -1,5 +1,9 @@
 'use strict';
 import DID_API from './api.json' assert { type: 'json' };
+// const sourceURL= 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg';
+const sourceURL = 's3://d-id-images-prod/google-oauth2|105073542135296881659/img_sJEH4c0VLK_YgFfwfwIOQ/chatimage.jpeg';
+// const audioURL = 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3';
+const audioURL = 's3://d-id-audios-prod/google-oauth2|105073542135296881659/PKRywuHkW7UyIRReq5Tr4/chataudio.wav';
 
 if (DID_API.key == '🤫') alert('Please put your api key inside ./api.json and restart..');
 
@@ -42,7 +46,7 @@ connectButton.onclick = async () => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
+      source_url: sourceURL,
     }),
   });
 
@@ -85,7 +89,7 @@ talkButton.onclick = async () => {
       body: JSON.stringify({
         script: {
           type: 'audio',
-          audio_url: 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
+          audio_url: audioURL,
         },
         driver_url: 'bank://lively/',
         config: {
@@ -236,7 +240,7 @@ function setVideoElement(stream) {
 
 function playIdleVideo() {
   talkVideo.srcObject = undefined;
-  talkVideo.src = 'or_idle.mp4';
+  talkVideo.src = 'idle.mp4';
   talkVideo.loop = true;
 }
 
