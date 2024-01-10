@@ -3,6 +3,7 @@
 ## Initial Setup:
 * (install express) open a terminal in the folder and run  - npm install express
 * (add your api key) edit the `api.json` inside the uncompressed folder and replace the emoji with your key
+* (select service) in the same `api.json` file, edit the `service` field to contain `talks` or `clips` to match the service you want to use
 
 
 ## Start the demo:
