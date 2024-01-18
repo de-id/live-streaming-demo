@@ -18,13 +18,23 @@ let statsIntervalId;
 let videoIsPlaying;
 let lastBytesReceived;
 
-const talkVideo = document.getElementById('talk-video');
-talkVideo.setAttribute('playsinline', '');
+const videoElement = document.getElementById('video-element');
+videoElement.setAttribute('playsinline', '');
 const peerStatusLabel = document.getElementById('peer-status-label');
 const iceStatusLabel = document.getElementById('ice-status-label');
 const iceGatheringStatusLabel = document.getElementById('ice-gathering-status-label');
 const signalingStatusLabel = document.getElementById('signaling-status-label');
 const streamingStatusLabel = document.getElementById('streaming-status-label');
+
+const presenterInputByService = {
+  talks: {
+    source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
+  },
+  clips: {
+    presenter_id: 'rian-lZC6MmWfC1',
+    driver_id: 'mXra4jY38i'
+  }
+}
 
 const connectButton = document.getElementById('connect-button');
 connectButton.onclick = async () => {
@@ -35,15 +45,13 @@ connectButton.onclick = async () => {
   stopAllStreams();
   closePC();
 
-  const sessionResponse = await fetchWithRetries(`${DID_API.url}/talks/streams`, {
+  const sessionResponse = await fetchWithRetries(`${DID_API.url}/${DID_API.service}/streams`, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${DID_API.key}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
-    }),
+    body: JSON.stringify(presenterInputByService[DID_API.service]),
   });
 
   const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = await sessionResponse.json();
@@ -59,7 +67,7 @@ connectButton.onclick = async () => {
     return;
   }
 
-  const sdpResponse = await fetch(`${DID_API.url}/talks/streams/${streamId}/sdp`, {
+  const sdpResponse = await fetch(`${DID_API.url}/${DID_API.service}/streams/${streamId}/sdp`, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${DID_API.key}`,
@@ -72,11 +80,11 @@ connectButton.onclick = async () => {
   });
 };
 
-const talkButton = document.getElementById('talk-button');
-talkButton.onclick = async () => {
+const startButton = document.getElementById('start-button');
+startButton.onclick = async () => {
   // connectionState not supported in firefox
   if (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') {
-    const talkResponse = await fetchWithRetries(`${DID_API.url}/talks/streams/${streamId}`, {
+    const playResponse = await fetchWithRetries(`${DID_API.url}/${DID_API.service}/streams/${streamId}`, {
       method: 'POST',
       headers: {
         Authorization: `Basic ${DID_API.key}`,
@@ -87,7 +95,11 @@ talkButton.onclick = async () => {
           type: 'audio',
           audio_url: 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
         },
-        driver_url: 'bank://lively/',
+        ...(DID_API.service === 'clips' && {
+          background: {
+            color: '#FFFFFF'
+          }
+        }),
         config: {
           stitch: true,
         },
@@ -99,7 +111,7 @@ talkButton.onclick = async () => {
 
 const destroyButton = document.getElementById('destroy-button');
 destroyButton.onclick = async () => {
-  await fetch(`${DID_API.url}/talks/streams/${streamId}`, {
+  await fetch(`${DID_API.url}/${DID_API.service}/streams/${streamId}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Basic ${DID_API.key}`,
@@ -121,7 +133,7 @@ function onIceCandidate(event) {
   if (event.candidate) {
     const { candidate, sdpMid, sdpMLineIndex } = event.candidate;
 
-    fetch(`${DID_API.url}/talks/streams/${streamId}/ice`, {
+    fetch(`${DID_API.url}/${DID_API.service}/streams/${streamId}/ice`, {
       method: 'POST',
       headers: {
         Authorization: `Basic ${DID_API.key}`,
@@ -173,8 +185,8 @@ function onTrack(event) {
    * The following code is designed to provide information about wether currently there is data
    * that's being streamed - It does so by periodically looking for changes in total stream data size
    *
-   * This information in our case is used in order to show idle video while no talk is streaming.
-   * To create this idle video use the POST https://api.d-id.com/talks endpoint with a silent audio file or a text script with only ssml breaks 
+   * This information in our case is used in order to show idle video while no video is streaming.
+   * To create this idle video use the POST https://api.d-id.com/talks (or clips) endpoint with a silent audio file or a text script with only ssml breaks
    * https://docs.aws.amazon.com/polly/latest/dg/supportedtags.html#break-tag
    * for seamless results use `config.fluent: true` and provide the same configuration as the streaming video
    */
@@ -222,12 +234,12 @@ async function createPeerConnection(offer, iceServers) {
 
 function setVideoElement(stream) {
   if (!stream) return;
-  talkVideo.srcObject = stream;
-  talkVideo.loop = false;
+  videoElement.srcObject = stream;
+  videoElement.loop = false;
 
   // safari hotfix
-  if (talkVideo.paused) {
-    talkVideo
+  if (videoElement.paused) {
+    videoElement
       .play()
       .then((_) => {})
       .catch((e) => {});
@@ -235,16 +247,16 @@ function setVideoElement(stream) {
 }
 
 function playIdleVideo() {
-  talkVideo.srcObject = undefined;
-  talkVideo.src = 'or_idle.mp4';
-  talkVideo.loop = true;
+  videoElement.srcObject = undefined;
+  videoElement.src = DID_API.service == 'clips' ? 'rian_idle.mp4' : 'or_idle.mp4';
+  videoElement.loop = true;
 }
 
 function stopAllStreams() {
-  if (talkVideo.srcObject) {
+  if (videoElement.srcObject) {
     console.log('stopping video streams');
-    talkVideo.srcObject.getTracks().forEach((track) => track.stop());
-    talkVideo.srcObject = null;
+    videoElement.srcObject.getTracks().forEach((track) => track.stop());
+    videoElement.srcObject = null;
   }
 }
 
