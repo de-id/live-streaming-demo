@@ -286,7 +286,12 @@ const maxDelaySec = 4;
 
 async function fetchWithRetries(url, options, retries = 1) {
   try {
-    return await fetch(url, options);
+    const res = await fetch(url, options);
+    if(res.status >= 200 && res.status <= 299) {
+      return res;
+    } else {
+      throw new Error(`Response status ${res.status}`);
+    }
   } catch (err) {
     if (retries <= maxRetryCount) {
       const delay = Math.min(Math.pow(2, retries) / 4 + Math.random(), maxDelaySec) * 1000;
