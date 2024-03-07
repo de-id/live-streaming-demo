@@ -347,16 +347,6 @@ async function agentsAPIworkflow() {
   axios.defaults.headers.common['Authorization'] = `Basic ${DID_API.key}`;
   axios.defaults.headers.common['content-type'] = 'application/json';
 
-  async function retry(url) {
-    let response = await axios.get(`${url}`);
-    console.log(response);
-    if (response.data.status == 'done') {
-      return console.log(response.data.id + ': ' + response.data.status);
-    } else {
-      return await retry(url);
-    }
-  }
-
   // STEP 1 : Create Knowledge - createKnowledge()
   const createKnowledge = await axios.post('/knowledge', {
     name: 'knowledge',
