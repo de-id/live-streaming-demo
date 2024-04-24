@@ -373,6 +373,7 @@ function closePC(pc = peerConnection) {
 
   clearInterval(statsIntervalId);
   isStreamReady = !stream_warmup;
+  streamVideoOpacity = 0;
   iceGatheringStatusLabel.innerText = '';
   signalingStatusLabel.innerText = '';
   iceStatusLabel.innerText = '';
