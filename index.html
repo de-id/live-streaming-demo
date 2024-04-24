@@ -5,10 +5,7 @@
     <!-- added google fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;700&display=swap" rel="stylesheet" />
 
     <style>
       .peerConnectionState-new {
@@ -71,6 +68,26 @@
 
       .streamingState-empty {
         color: grey;
+      }
+
+      .streamEvent-started {
+        color: green;
+      }
+
+      .streamEvent-stop {
+        color: orange;
+      }
+
+      .streamEvent-ready {
+        color: green;
+      }
+
+      .streamEvent-error {
+        color: red;
+      }
+
+      .streamEvent-dont-care {
+        color: gray;
       }
 
       /* added css from here */
@@ -168,6 +185,7 @@
         ICE status: <label id="ice-status-label"></label><br />
         Peer connection status: <label id="peer-status-label"></label><br />
         Signaling status: <label id="signaling-status-label"></label><br />
+        Last stream event: <label id="stream-event-label"></label><br />
         Streaming status: <label id="streaming-status-label"></label><br />
       </div>
     </div>
