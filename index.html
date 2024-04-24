@@ -146,12 +146,17 @@
       }
 
       #video-wrapper div {
+        position: relative;
+        height: 100%;
         width: 400px;
         margin: 0 auto;
-        padding: 50px 0 0 0;
       }
       video {
+        position: absolute;
         display: block;
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
         /*border:1px solid;*/
         border-radius: 50%;
         background-color: #fff;
@@ -165,7 +170,8 @@
       <!-- added "id=video-wrapper" -->
       <div id="video-wrapper">
         <div>
-          <video id="video-element" width="400" height="400" autoplay></video>
+          <video id="idle-video-element" width="400" height="400" autoplay loop style="opacity: 1"></video>
+          <video id="stream-video-element" width="400" height="400" autoplay style="opacity: 0"></video>
         </div>
       </div>
       <br />
@@ -180,8 +186,7 @@
       <!-- added div#status -->
       <div id="status">
         <!-- removed the wrapping <div> tags -->
-        ICE gathering status: <label id="ice-gathering-status-label"></label
-        ><br />
+        ICE gathering status: <label id="ice-gathering-status-label"></label><br />
         ICE status: <label id="ice-status-label"></label><br />
         Peer connection status: <label id="peer-status-label"></label><br />
         Signaling status: <label id="signaling-status-label"></label><br />

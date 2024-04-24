@@ -18,11 +18,16 @@ let sessionClientAnswer;
 let statsIntervalId;
 let lastBytesReceived;
 let videoIsPlaying = false;
-const stream_warmup = true; // Set this variable to true to request stream warmup upon connection, aiming to mitigate potential jittering issues
+let streamVideoOpacity = 0;
+
+// Set this variable to true to request stream warmup upon connection to mitigate potential jittering issues
+const stream_warmup = false;
 let isStreamReady = !stream_warmup;
 
-const videoElement = document.getElementById('video-element');
-videoElement.setAttribute('playsinline', '');
+const idleVideoElement = document.getElementById('idle-video-element');
+const streamVideoElement = document.getElementById('stream-video-element');
+idleVideoElement.setAttribute('playsinline', '');
+streamVideoElement.setAttribute('playsinline', '');
 const peerStatusLabel = document.getElementById('peer-status-label');
 const iceStatusLabel = document.getElementById('ice-status-label');
 const iceGatheringStatusLabel = document.getElementById('ice-gathering-status-label');
@@ -92,7 +97,10 @@ connectButton.onclick = async () => {
 const startButton = document.getElementById('start-button');
 startButton.onclick = async () => {
   // connectionState not supported in firefox
-  if (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') {
+  if (
+    (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
+    isStreamReady
+  ) {
     const playResponse = await fetchWithRetries(`${DID_API.url}/${DID_API.service}/streams/${streamId}`, {
       method: 'POST',
       headers: {
@@ -203,12 +211,20 @@ function onSignalingStateChange() {
 }
 
 function onVideoStatusChange(videoIsPlaying, stream) {
-  const status = videoIsPlaying ? 'streaming' : 'empty';
+  let status;
 
-  if (isStreamReady) {
-    const remoteStream = stream;
-    videoIsPlaying ? setVideoElement(remoteStream) : playIdleVideo();
+  if (videoIsPlaying) {
+    status = 'streaming';
+    streamVideoOpacity = isStreamReady ? 1 : 0;
+    setStreamVideoElement(stream);
+  } else {
+    status = 'empty';
+    streamVideoOpacity = 0;
   }
+
+  streamVideoElement.style.opacity = streamVideoOpacity;
+  idleVideoElement.style.opacity = 1 - streamVideoOpacity;
+
   streamingStatusLabel.innerText = status;
   streamingStatusLabel.className = 'streamingState-' + status;
 }
@@ -314,14 +330,16 @@ async function createPeerConnection(offer, iceServers) {
   return sessionClientAnswer;
 }
 
-function setVideoElement(stream) {
+function setStreamVideoElement(stream) {
   if (!stream) return;
-  videoElement.srcObject = stream;
-  videoElement.loop = false;
+
+  streamVideoElement.srcObject = stream;
+  streamVideoElement.loop = false;
+  streamVideoElement.mute = !isStreamReady;
 
   // safari hotfix
-  if (videoElement.paused) {
-    videoElement
+  if (streamVideoElement.paused) {
+    streamVideoElement
       .play()
       .then((_) => {})
       .catch((e) => {});
@@ -329,16 +347,15 @@ function setVideoElement(stream) {
 }
 
 function playIdleVideo() {
-  videoElement.srcObject = undefined;
-  videoElement.src = DID_API.service == 'clips' ? 'rian_idle.mp4' : 'or_idle.mp4';
-  videoElement.loop = true;
+  idleVideoElement.src = DID_API.service == 'clips' ? 'rian_idle.mp4' : 'or_idle.mp4';
 }
 
 function stopAllStreams() {
-  if (videoElement.srcObject) {
+  if (streamVideoElement.srcObject) {
     console.log('stopping video streams');
-    videoElement.srcObject.getTracks().forEach((track) => track.stop());
-    videoElement.srcObject = null;
+    streamVideoElement.srcObject.getTracks().forEach((track) => track.stop());
+    streamVideoElement.srcObject = null;
+    streamVideoOpacity = 0;
   }
 }
 
