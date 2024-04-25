@@ -21,7 +21,7 @@ let videoIsPlaying = false;
 let streamVideoOpacity = 0;
 
 // Set this variable to true to request stream warmup upon connection to mitigate potential jittering issues
-const stream_warmup = false;
+const stream_warmup = true;
 let isStreamReady = !stream_warmup;
 
 const idleVideoElement = document.getElementById('idle-video-element');
