@@ -276,7 +276,7 @@ function onStreamEvent(message) {
         status = 'started';
         break;
       case 'stream/done':
-        status = 'stop';
+        status = 'done';
         break;
       case 'stream/ready':
         status = 'ready';
