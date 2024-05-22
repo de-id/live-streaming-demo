@@ -1,87 +1,226 @@
-.peerConnectionState-new {
-  color: cornflowerblue;
-}
-.peerConnectionState-connecting {
-  color: orange;
-}
-.peerConnectionState-connected {
-  color: green;
-}
-.peerConnectionState-disconnected,
-.peerConnectionState-closed,
-.peerConnectionState-failed {
-  color: red;
-}
+.peerConnectionState-new { color: cornflowerblue; }
+.peerConnectionState-connecting { color: orange; }
+.peerConnectionState-connected { color: green; }
+.peerConnectionState-disconnected, .peerConnectionState-closed, .peerConnectionState-failed { color: red; }
+.iceConnectionState-new { color: cornflowerblue; }
+.iceConnectionState-checking { color: orange; }
+.iceConnectionState-connected, .iceConnectionState-completed { color: green; }
+.peerConnectionState-disconnected, .peerConnectionState-closed, .peerConnectionState-failed { color: red; }
+.iceGatheringState-new { color: cornflowerblue; }
+.iceGatheringState-gathering { color: orange; }
+.iceGatheringState-complete { color: black; }
+.signalingState-stable { color: green; }
+.signalingState-have-local-offer, .signalingState-have-remote-offer, .signalingState-have-local-pranswer, .signalingState-have-remote-pranswer { color: cornflowerblue; }
+.signalingState-closed { color: red; }
+.streamingState-streaming { color: green; }
+.streamingState-empty { color: grey; }
+#agentId-label, #chatId-label { color: green; }
 
-.iceConnectionState-new {
-  color: cornflowerblue;
-}
-.iceConnectionState-checking {
-  color: orange;
-}
-.iceConnectionState-connected,
-.iceConnectionState-completed {
-  color: green;
-}
-.peerConnectionState-disconnected,
-.peerConnectionState-closed,
-.peerConnectionState-failed {
-  color: red;
-}
-
-.iceGatheringState-new {
-  color: cornflowerblue;
-}
-.iceGatheringState-gathering {
-  color: orange;
-}
-.iceGatheringState-complete {
-  color: black;
-}
-
-.signalingState-stable {
-  color: green;
-}
-.signalingState-have-local-offer,
-.signalingState-have-remote-offer,
-.signalingState-have-local-pranswer,
-.signalingState-have-remote-pranswer {
-  color: cornflowerblue;
-}
-.signalingState-closed {
-  color: red;
-}
-
-.streamingState-streaming {
-  color: green;
-}
-
-.streamingState-empty {
-  color: grey;
-}
-
-#agentId-label, #chatId-label{
-  color: green;
-}
-
-/* added css from here */
-
-body * {
+body {
+  background-image: url('https://i.imgur.com/WKqkUDA.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #121212;
+  color: #ffffff;
   font-family: 'Mulish', sans-serif;
-  text-align: center;
-}
-
-#content {
+  margin: 0;
   display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  margin-top: 50px;
+  justify-content: flex-end;
+  align-items: flex-start;
+  height: 100vh;
+  padding-top: 0px;
 }
 
-#buttons {
-  clear: both;
-  padding: 0 0 0 0;
+.container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1200px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.left-panel {
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  width: 250px;
+  height: calc(100vh - 40px);
+  overflow-y: auto;
+  position: fixed;
+  top: 10px;
+  left: 20px;
+  box-sizing: border-box;
+}
+
+.left-panel h4 {
+  margin: 10px 0;
+  color: #ccc;
+}
+
+.left-panel button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  font-size: 14px;
+  margin: 5px 0;
+  background-color: #333;
+  color: #ccc;
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+}
+
+.left-panel button:hover {
+  background-color: #444;
+}
+
+.signup-button {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  margin-bottom: 30px;
+  background-color: #30f0b0;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  z-index: 1;
+}
+
+.signup-button:hover {
+  background-color: #40f9be;
+}
+
+.signup-button span {
+  margin-left: 5px;
+}
+
+
+.main-content {
+  width: calc(100% - 590px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.header-container h1 {
+  font-size: 24px;
+  margin: 0;
+}
+
+.icon-container {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 50px;
+  color: gold;
+}
+
+.scales-icon {
+  font-size: 30px;
+}
+
+.content-wrapper {
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  border-radius: 10px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+#video-wrapper {
+  width: 200px;
+  height: 200px;
+  background-position: top;
+  margin-bottom: 10px;
+}
+
+video {
+  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.animated {
+  animation: opacityAnimation 0.2s ease-in-out;
+}
+
+@keyframes opacityAnimation {
+  from {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.chat-container {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+.chat {
+  margin-top: 10px;
+}
+
+#msgHistory {
+  overflow-y: auto;
+  max-height: 150px;
+}
+
+.signup-button {
+  margin-bottom: 20px;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+}
+
+.signup-button:hover {
+  background-color: #059669;
+}
+
+.signup-button span {
+  margin-left: 5px;
+}
+
+textarea {
+  font-size: 16px;
   text-align: center;
+  width: 100%;
+  border-radius: 5px;
+  padding: 10px;
+  border: 2px solid #2e6df4;
 }
 
 button {
@@ -90,86 +229,26 @@ button {
   border: none;
   font-size: 16px;
   margin: 0 5px;
-  background-color: #7459fe;
+  background-color: #2e6df4;
   color: #fff;
-}
-
-button#connect-button {
-background-color: green;
-}
-button#destroy-button{
-  background-color: red;
-}
-
-button#start-button{
-  margin: 1em;
-}
-
-button:hover, #destroy-button:hover,#connect-button:hover {
-  filter: brightness(85%);
   cursor: pointer;
   transition: all 0.2s ease-out;
 }
 
-h4{
-  margin: 0;
-  margin-bottom: 10px;
+button#connect-button {
+  background-color: green;
 }
 
-textarea {
-  font-size: 16px;
-  text-align: center;
-  width: 500px;
-  border-radius: 5px;
-  padding: 10px 20px;
-  border: 2px solid #7459fe;
-  font-size: 16px;
-  margin: 0 5px;
+button#destroy-button {
+  background-color: red;
 }
 
-#msgHistory {
-  overflow-y: auto;
-  line-break: loose;
+button#start-button {
+  margin: 1em;
 }
 
-#status {
-  display: inline-block;
-  zoom: 1;
-  line-height: 140%;
-  font-size: 15px;
-  width: 400px;
-}
-
-#status div {
-  padding-bottom: 10px;
-}
-
-#video-wrapper {
-  /* height: 500px; */
-  width: 400px;
-  height: 400px;
-  background-position: top;
-}
-
-.chat{
-  width: 400px;
-}
-
-
-video {
-  /* display: block; */
-  border-radius: 50%;
-  background-image: url("emma_idle.png");
-  background-position: top;
-  /* position: absolute; */
-  background-size: contain;
-}
-
-.animated {
-  animation: opacityAnimation 0.2s ease-in-out;
-}
-
-@keyframes opacityAnimation {
-from { opacity: 0.8; }
-to { opacity: 1; }
+button:hover,
+#destroy-button:hover,
+#connect-button:hover {
+  filter: brightness(85%);
 }

@@ -283,7 +283,7 @@ connectButton.onclick = async () => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg'
+      source_url: 'https://i.imgur.com/iRWeId7.png'
     }),
   });
 
@@ -456,16 +456,16 @@ async function agentsAPIworkflow() {
           "type": "microsoft",
           "voice_id": "en-US-JennyMultilingualV2Neural"
         },
-        "thumbnail": "https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg",
-        "source_url": "https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg"
+        "thumbnail": "https://i.imgur.com/WKqkUDA.jpg",
+        "source_url": "https://i.imgur.com/WKqkUDA.jpg"
       },
       "llm": {
         "type": "openai",
         "provider": "openai",
         "model": "gpt-3.5-turbo-1106",
-        "instructions": "Your name is Emma, an AI designed to assist with information about Prompt Engineering and RAG"
+        "instructions": "Your name is , Banksz, seasoned bankruptcy paralegal to assist with information about chapter 7, 13 and bankruptcy.  You can help users qualify and gather their creditor addresses (noticing/bankruptcy address), analyze documents and images and help create a report."
       },
-      "preview_name": "Emma"
+      "preview_name": "Banksz"
     }
 
   )
@@ -508,5 +508,5 @@ agentsButton.onclick = async () => {
 }
 
 // Paste Your Created Agent and Chat IDs Here:
-agentId = ""
-chatId = ""
+agentId = "agt_WVvEf4RS"
+chatId = "cht_ne_pPS-WeeDIASzc3kG5V"
