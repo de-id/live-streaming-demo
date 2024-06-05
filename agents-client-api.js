@@ -1,5 +1,6 @@
 'use strict';
-import DID_API from './api.json' assert { type: 'json' };
+const fetchJsonFile = await fetch("./api.json")
+const DID_API = await fetchJsonFile.json()
 
 if (DID_API.key == '🤫') alert('Please put your api key inside ./api.json and restart..');
 
@@ -167,7 +168,7 @@ function onTrack(event) {
   statsIntervalId = setInterval(async () => {
     const stats = await peerConnection.getStats(event.track);
     stats.forEach((report) => {
-      if (report.type === 'inbound-rtp' && report.mediaType === 'video') {
+     if (report.type === 'inbound-rtp' && report.kind === 'video') {
 
         const videoStatusChanged = videoIsPlaying !== report.bytesReceived > lastBytesReceived;
 
@@ -370,7 +371,7 @@ destroyButton.onclick = async () => {
 async function agentsAPIworkflow() {
   agentIdLabel.innerHTML = `<span style='color:orange'>Processing...<style='color:orange'>`
   chatIdLabel.innerHTML = `<span style='color:orange'>Processing...<style='color:orange'>`
-  axios.defaults.baseURL = 'https://api.d-id.com/';
+  axios.defaults.baseURL = `${DID_API.url}`;
   axios.defaults.headers.common['Authorization'] = `Basic ${DID_API.key}`
   axios.defaults.headers.common['content-type'] = 'application/json'
 
