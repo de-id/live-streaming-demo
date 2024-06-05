@@ -18,4 +18,4 @@ app.get('/agents', function(req, res) {
 
 const server = http.createServer(app);
 
-server.listen(port, () => console.log(`Server started on port localhost:${port}`));
+server.listen(port, () => console.log(`Server started on port localhost:${port}\nhttp://localhost:${port}\nhttp://localhost:${port}/agents`));
