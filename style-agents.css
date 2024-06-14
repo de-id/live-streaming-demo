@@ -1,0 +1,175 @@
+.peerConnectionState-new {
+  color: cornflowerblue;
+}
+.peerConnectionState-connecting {
+  color: orange;
+}
+.peerConnectionState-connected {
+  color: green;
+}
+.peerConnectionState-disconnected,
+.peerConnectionState-closed,
+.peerConnectionState-failed {
+  color: red;
+}
+
+.iceConnectionState-new {
+  color: cornflowerblue;
+}
+.iceConnectionState-checking {
+  color: orange;
+}
+.iceConnectionState-connected,
+.iceConnectionState-completed {
+  color: green;
+}
+.peerConnectionState-disconnected,
+.peerConnectionState-closed,
+.peerConnectionState-failed {
+  color: red;
+}
+
+.iceGatheringState-new {
+  color: cornflowerblue;
+}
+.iceGatheringState-gathering {
+  color: orange;
+}
+.iceGatheringState-complete {
+  color: black;
+}
+
+.signalingState-stable {
+  color: green;
+}
+.signalingState-have-local-offer,
+.signalingState-have-remote-offer,
+.signalingState-have-local-pranswer,
+.signalingState-have-remote-pranswer {
+  color: cornflowerblue;
+}
+.signalingState-closed {
+  color: red;
+}
+
+.streamingState-streaming {
+  color: green;
+}
+
+.streamingState-empty {
+  color: grey;
+}
+
+#agentId-label, #chatId-label{
+  color: green;
+}
+
+/* added css from here */
+
+body * {
+  font-family: 'Mulish', sans-serif;
+  text-align: center;
+}
+
+#content {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  margin-top: 50px;
+}
+
+#buttons {
+  clear: both;
+  padding: 0 0 0 0;
+  text-align: center;
+}
+
+button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  font-size: 16px;
+  margin: 0 5px;
+  background-color: #7459fe;
+  color: #fff;
+}
+
+button#connect-button {
+background-color: green;
+}
+button#destroy-button{
+  background-color: red;
+}
+
+button#start-button{
+  margin: 1em;
+}
+
+button:hover, #destroy-button:hover,#connect-button:hover {
+  filter: brightness(85%);
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+}
+
+h4{
+  margin: 0;
+  margin-bottom: 10px;
+}
+
+textarea {
+  font-size: 16px;
+  text-align: center;
+  width: 500px;
+  border-radius: 5px;
+  padding: 10px 20px;
+  border: 2px solid #7459fe;
+  font-size: 16px;
+  margin: 0 5px;
+}
+
+#msgHistory {
+  overflow-y: auto;
+  line-break: loose;
+}
+
+#status {
+  display: inline-block;
+  zoom: 1;
+  line-height: 140%;
+  font-size: 15px;
+  width: 400px;
+}
+
+#status div {
+  padding-bottom: 10px;
+}
+
+#video-wrapper {
+  /* height: 500px; */
+  width: 400px;
+  height: 400px;
+  background-position: top;
+}
+
+.chat{
+  width: 400px;
+}
+
+
+video {
+  /* display: block; */
+  border-radius: 50%;
+  background-image: url("emma_idle.png");
+  background-position: top;
+  /* position: absolute; */
+  background-size: contain;
+}
+
+.animated {
+  animation: opacityAnimation 0.2s ease-in-out;
+}
+
+@keyframes opacityAnimation {
+from { opacity: 0.8; }
+to { opacity: 1; }
+}
