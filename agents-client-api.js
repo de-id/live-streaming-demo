@@ -349,6 +349,13 @@ startButton.onclick = async () => {
         ]
       }),
     });
+    const playResponseData = await playResponse.json();
+    if (playResponse.status === 200 && playResponseData.chatMode === 'TextOnly') {
+      console.log('User is out of credit, API only return text messages');
+      document.getElementById(
+        'msgHistory'
+      ).innerHTML += `<span style='opacity:0.5'> ${playResponseData.result}</span><br>`;
+    }
   }
 };
 
