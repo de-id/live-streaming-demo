@@ -454,7 +454,7 @@ async function agentsAPIworkflow() {
         "provider": "pinecone",
         "embedder": {
           "provider": "azure-open-ai",
-          "model": ""
+          "model": "text-large-003"
         },
         "id": knowledgeId
       },
