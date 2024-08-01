@@ -41,8 +41,8 @@ const presenterInputByService = {
     source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
   },
   clips: {
-    presenter_id: 'rian-lZC6MmWfC1',
-    driver_id: 'mXra4jY38i',
+    presenter_id: 'v2_public_alex@qcvo4gupoy',
+    driver_id: 'e3nbserss8',
   },
 };
 
@@ -246,7 +246,7 @@ function onTrack(event) {
   statsIntervalId = setInterval(async () => {
     const stats = await peerConnection.getStats(event.track);
     stats.forEach((report) => {
-     if (report.type === 'inbound-rtp' && report.kind === 'video') {
+      if (report.type === 'inbound-rtp' && report.kind === 'video') {
         const videoStatusChanged = videoIsPlaying !== report.bytesReceived > lastBytesReceived;
 
         if (videoStatusChanged) {
@@ -342,13 +342,13 @@ function setStreamVideoElement(stream) {
   if (streamVideoElement.paused) {
     streamVideoElement
       .play()
-      .then((_) => {})
-      .catch((e) => {});
+      .then((_) => { })
+      .catch((e) => { });
   }
 }
 
 function playIdleVideo() {
-  idleVideoElement.src = DID_API.service == 'clips' ? 'rian_idle.mp4' : 'or_idle.mp4';
+  idleVideoElement.src = DID_API.service == 'clips' ? 'alex_v2_idle.mp4' : 'or_idle.mp4';
 }
 
 function stopAllStreams() {
