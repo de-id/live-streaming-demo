@@ -1,5 +1,7 @@
 {
-    "key": "🤫",
-    "url": "https://api.d-id.com",
-    "service": "talks"
+  "key": "",
+  "url": "https://api-dev.d-id.com",
+  "websocketToken": "",
+  "websocketUrl": "wss://poyy1p600g.execute-api.us-west-2.amazonaws.com/dev",
+  "service": "talks"
 }
