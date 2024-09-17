@@ -60,9 +60,15 @@ connectButton.onclick = async () => {
   try {
     // Step 1: Connect to WebSocket
     ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.websocketToken);
+    console.log('WebSocket ws', ws);
 
     // Step 2: Send "start-stream" message to WebSocket
-    const startStreamMessage = { message_type: 'start-stream' };
+    const startStreamMessage = {
+      type: 'init-stream',
+      payload: {
+        source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Noelle_f/v1_image.jpeg',
+      },
+    };
     sendMessage(ws, startStreamMessage);
 
     // Step 3: Handle WebSocket response for "start-stream"
@@ -82,11 +88,11 @@ connectButton.onclick = async () => {
 
         // Step 4: Send SDP answer to WebSocket
         const sdpMessage = {
-          message_type: 'sdp',
-          data: {
+          type: 'sdp',
+          payload: {
             answer: sessionClientAnswer,
             session_id: sessionId,
-            stream_id: streamId,
+            // stream_id: streamId,
           },
         };
         sendMessage(ws, sdpMessage);
@@ -101,13 +107,9 @@ connectButton.onclick = async () => {
       }
     };
   } catch (error) {
-    console.error('Failed to connect and set up stream:', error);
+    console.error('Failed to connect and set up stream:', error.type);
   }
 };
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 const startButton = document.getElementById('start-button');
 startButton.onclick = async () => {
@@ -117,33 +119,27 @@ startButton.onclick = async () => {
     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
     isStreamReady
   ) {
-    const text = 'Hello how are you? What can you do?';
+    const text =
+      'Lily had always been afraid of heights, but today she stood at the edge of a cliff, staring at the ocean far below. She had been dared by her friends to jump, and although her heart pounded in her chest, she was determined not to back down. The salty wind whipped her hair as she took a deep breath, closing her eyes to gather courage.';
     const chunks = text.split(' ');
     chunks.push('');
     for (const chunk of chunks) {
       console.log('chunk', chunk);
       const streamMessage = {
-        message_type: 'input-stream',
-        data: {
-          script: {
-            type: 'text',
-            input: chunk,
-            provider: {
-              language: 'English',
-              access: 'premium',
-              model_id: 'eleven_turbo_v2_5',
-              type: 'elevenlabs',
-              voice_id: '2EiwWnXFnvU5JabPnv8n',
-            },
+        type: 'stream-text',
+        payload: {
+          input: chunk,
+          provider: {
+            language: 'English',
+            access: 'premium',
+            model_id: 'eleven_turbo_v2_5',
+            type: 'elevenlabs',
+            voice_id: '2EiwWnXFnvU5JabPnv8n',
           },
-          ...(DID_API.service === 'clips' && {
-            background: {
-              color: '#FFFFFF',
-            },
-          }),
-          config: {
-            stitch: true,
-          },
+          // provider: {
+          //   type: 'microsoft',
+          //   voice_id: 'en-US-JennyNeural',
+          // },
           session_id: sessionId,
           stream_id: streamId,
         },
@@ -152,7 +148,6 @@ startButton.onclick = async () => {
       ws.onmessage = async (event) => {
         console.log('Stream message received:', event.data);
       };
-      await sleep(100);
     }
   }
 };
@@ -181,16 +176,25 @@ function onIceCandidate(event) {
   if (event.candidate) {
     const { candidate, sdpMid, sdpMLineIndex } = event.candidate;
     sendMessage(ws, {
-      message_type: 'ice',
-      data: { stream_id: streamId, session_id: sessionId, candidate, sdpMid, sdpMLineIndex },
+      type: 'ice',
+      payload: {
+        // stream_id: streamId,
+        session_id: sessionId,
+        candidate,
+        sdpMid,
+        sdpMLineIndex,
+      },
     });
     ws.onmessage = async (event) => {
       console.log('Ice message received:', event.data);
     };
   } else {
     sendMessage(ws, {
-      message_type: 'ice',
-      data: { stream_id: streamId, session_id: sessionId },
+      type: 'ice',
+      payload: {
+        //  stream_id: streamId,
+        session_id: sessionId,
+      },
     });
     ws.onmessage = async (event) => {
       console.log('Ice message received on else:', event.data);
