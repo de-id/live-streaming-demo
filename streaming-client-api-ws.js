@@ -154,14 +154,17 @@ startButton.onclick = async () => {
 
 const destroyButton = document.getElementById('destroy-button');
 destroyButton.onclick = async () => {
-  await fetch(`${DID_API.url}/${DID_API.service}/streams/${streamId}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Basic ${DID_API.key}`,
-      'Content-Type': 'application/json',
+  const streamMessage = {
+    type: 'delete-stream',
+    payload: {
+      session_id: sessionId,
+      stream_id: streamId,
     },
-    body: JSON.stringify({ session_id: sessionId }),
-  });
+  };
+  sendMessage(ws, streamMessage);
+  ws.onmessage = async (event) => {
+    console.log('Stream deleted:', event.data);
+  };
 
   stopAllStreams();
   closePC();
