@@ -62,7 +62,7 @@ connectButton.onclick = async () => {
     ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.websocketToken);
     console.log('WebSocket ws', ws);
 
-    // Step 2: Send "start-stream" message to WebSocket
+    // Step 2: Send "init-stream" message to WebSocket
     const startStreamMessage = {
       type: 'init-stream',
       payload: {
@@ -71,7 +71,7 @@ connectButton.onclick = async () => {
     };
     sendMessage(ws, startStreamMessage);
 
-    // Step 3: Handle WebSocket response for "start-stream"
+    // Step 3: Handle WebSocket response for "init-stream"
     ws.onmessage = async (event) => {
       const data = JSON.parse(event.data);
 
@@ -79,7 +79,7 @@ connectButton.onclick = async () => {
       streamId = newStreamId;
       sessionId = newSessionId;
 
-      console.log('start-stream response', streamId, sessionId);
+      console.log('init-stream response', streamId, sessionId);
 
       try {
         sessionClientAnswer = await createPeerConnection(offer, iceServers);
