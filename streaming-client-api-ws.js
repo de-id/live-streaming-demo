@@ -59,7 +59,7 @@ connectButton.onclick = async () => {
 
   try {
     // Step 1: Connect to WebSocket
-    ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.websocketToken);
+    ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.key);
     console.log('WebSocket ws', ws);
 
     // Step 2: Send "init-stream" message to WebSocket
@@ -129,17 +129,17 @@ startButton.onclick = async () => {
         type: 'stream-text',
         payload: {
           input: chunk,
-          provider: {
-            language: 'English',
-            access: 'premium',
-            model_id: 'eleven_turbo_v2_5',
-            type: 'elevenlabs',
-            voice_id: '2EiwWnXFnvU5JabPnv8n',
-          },
           // provider: {
-          //   type: 'microsoft',
-          //   voice_id: 'en-US-JennyNeural',
+          //   language: 'English',
+          //   access: 'premium',
+          //   model_id: 'eleven_turbo_v2_5',
+          //   type: 'elevenlabs',
+          //   voice_id: '2EiwWnXFnvU5JabPnv8n',
           // },
+          provider: {
+            type: 'microsoft',
+            voice_id: 'en-US-JennyNeural',
+          },
           session_id: sessionId,
           stream_id: streamId,
         },
@@ -195,7 +195,7 @@ function onIceCandidate(event) {
     sendMessage(ws, {
       type: 'ice',
       payload: {
-        //  stream_id: streamId,
+        stream_id: streamId,
         session_id: sessionId,
       },
     });
@@ -419,7 +419,7 @@ const maxDelaySec = 4;
 
 async function connectToWebSocket(url, token) {
   return new Promise((resolve, reject) => {
-    const wsUrl = `${url}?authorization=Bearer ${encodeURIComponent(token)}`;
+    const wsUrl = `${url}?authorization=Basic ${encodeURIComponent(token)}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

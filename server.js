@@ -1,10 +1,15 @@
 const express = require('express');
 const WebSocket = require('ws');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+const configPath = path.join(__dirname, 'api.json');
+const DID_API = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+
 let ws;
 
 // Enable CORS for frontend requests
@@ -21,7 +26,7 @@ app.get('/ws', function (req, res) {
 // Setup WebSocket connection to external API
 const connectToWebSocketAPI = (url, token) => {
   return new Promise((resolve, reject) => {
-    const wsUrl = `${url}?authorization=Bearer ${encodeURIComponent(token)}`;
+    const wsUrl = `${url}?authorization=Basic ${encodeURIComponent(token)}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
@@ -43,7 +48,7 @@ const connectToWebSocketAPI = (url, token) => {
 // API route to proxy the WebSocket connection
 app.post('/connect', async (req, res) => {
   try {
-    ws = await connectToWebSocketAPI(process.env.WEBSOCKET_URL, process.env.WEBSOCKET_TOKEN);
+    ws = await connectToWebSocketAPI(DID_API.websocketUrl, DID_API.key);
     const startStreamMessage = {
       type: 'init-stream',
       payload: {

@@ -1,7 +1,6 @@
 {
   "key": "bmhhbi50cmFuQGRlaWRlbnRpZmljYXRpb24uY28:7cDEilPXb5wTrpgasj7_P",
   "url": "https://api-dev.d-id.com",
-  "websocketToken": "",
   "websocketUrl": "wss://yz0l6981v2.execute-api.us-west-2.amazonaws.com/dev",
   "service": "talks"
 }
