@@ -119,10 +119,10 @@ startButton.onclick = async () => {
     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
     isStreamReady
   ) {
-    const text =
-      'Lily had always been afraid of heights, but today she stood at the edge of a cliff, staring at the ocean far below. She had been dared by her friends to jump, and although her heart pounded in her chest, she was determined not to back down. The salty wind whipped her hair as she took a deep breath, closing her eyes to gather courage.';
+    const text = '1 2 3 4 5 6 7 8 9';
     const chunks = text.split(' ');
     chunks.push('');
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     for (const chunk of chunks) {
       console.log('chunk', chunk);
       const streamMessage = {
@@ -144,7 +144,7 @@ startButton.onclick = async () => {
           stream_id: streamId,
         },
       };
-      sendMessage(ws, streamMessage);
+      await sendMessage(ws, streamMessage);
       ws.onmessage = async (event) => {
         console.log('Stream message received:', event.data);
       };
@@ -442,7 +442,20 @@ function sendMessage(ws, message) {
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(message));
     console.log('Message sent:', message);
+
+    return new Promise((resolve, reject) => {
+      ws.onmessage = (event) => {
+        console.log('Stream message received:', event.data);
+        resolve(event.data);
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        reject(error);
+      };
+    });
   } else {
     console.error('WebSocket is not open. Cannot send message.');
+    return Promise.reject('WebSocket not open');
   }
 }
