@@ -30,7 +30,7 @@ const streamingStatusLabel = document.getElementById('streaming-status-label');
 const agentIdLabel = document.getElementById('agentId-label');
 const chatIdLabel = document.getElementById('chatId-label');
 const textArea = document.getElementById("textArea");
-const agentFlow = false;
+let agentFlow = false;
 
 // Play the idle video when the page is loaded
 window.onload = (event) => {
@@ -85,7 +85,9 @@ async function createPeerConnection(offer, iceServers) {
     }
     if (msg.includes("stream/started")) {
       console.log(msg)
-      document.getElementById("msgHistory").innerHTML += `<span>${decodedMsg}</span><br><br>`
+      if (agentFlow) {
+        document.getElementById("msgHistory").innerHTML += `<span>${decodedMsg}</span><br><br>`
+      }
     }
     else {
       console.log(msg)
@@ -390,7 +392,7 @@ startButton.onclick = async () => {
         session_id: sessionId,
       }),
     });
-    if (playResponse.status === 200 && playResponseData.chatMode === 'TextOnly') {
+    if (playResponse.status === 200) {
       console.log('User is out of credit, API only return text messages');
       document.getElementById(
         'msgHistory'
@@ -570,6 +572,7 @@ async function agentsAPIworkflow() {
 const agentsButton = document.getElementById("agents-button")
 agentsButton.onclick = async () => {
   try{
+    agentFlow = true;
     const agentsIds = {}
     if (agentFlow) {
       agentsIds = {} = await agentsAPIworkflow()
