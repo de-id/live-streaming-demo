@@ -30,6 +30,7 @@ const streamingStatusLabel = document.getElementById('streaming-status-label');
 const agentIdLabel = document.getElementById('agentId-label');
 const chatIdLabel = document.getElementById('chatId-label');
 const textArea = document.getElementById("textArea");
+const agentFlow = false;
 
 // Play the idle video when the page is loaded
 window.onload = (event) => {
@@ -266,7 +267,7 @@ async function fetchWithRetries(url, options, retries = 1) {
 
 const connectButton = document.getElementById('connect-button');
 connectButton.onclick = async () => {
-  if (agentId == "" || agentId === undefined) {
+  if ((agentId == "" || agentId === undefined) && agentFlow) {
     return alert("1. Click on the 'Create new Agent with Knowledge' button\n2. Open the Console and wait for the process to complete\n3. Press on the 'Connect' button\n4. Type and send a message to the chat\nNOTE: You can store the created 'agentID' and 'chatId' variables at the bottom of the JS file for future chats")
   }
 
@@ -331,30 +332,96 @@ startButton.onclick = async () => {
 
 
     // Agents Overview - Step 3: Send a Message to a Chat session - Send a message to a Chat
-    const playResponse = await fetchWithRetries(`${DID_API.url}/agents/${agentId}/chat/${chatId}`, {
+
+    if (!agentFlow) {
+      // Agents Overview - Step 3: Send a Message to a Chat session - Send a message to a Chat
+    const playResponse = await fetchWithRetries(`${DID_API.url}/talks`, {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${DID_API.key}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        "streamId": streamId,
-        "sessionId": sessionId,
-        "messages": [
-          {
-            "role": "user",
-            "content": txtAreaValue,
-            "created_at": new Date().toString()
-          }
-        ]
-      }),
+      body: JSON.stringify(    {
+        "thumbnail": "https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg",
+        "source_url": "https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg",
+        "script": {
+            "type": "text",
+            "input": txtAreaValue,
+            "provider": {
+                "type": "microsoft",
+                "voice_id": "en-US-JennyMultilingualV2Neural",
+                "voice_config": {
+                    "style": "Cheerful"
+                }
+            }
+        }
+    }),
     });
     const playResponseData = await playResponse.json();
+
+    const getResponse = await fetchWithRetries(`${DID_API.url}/talks/${playResponseData.id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Basic ${DID_API.key}`,
+        'Content-Type': 'application/json',
+      }
+    });
+    const getResponseData = await getResponse.json();
+
+    const streamResponse = await fetchWithRetries(`${DID_API.url}/${DID_API.service}/streams/${streamId}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${DID_API.key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        script: {
+          type: 'audio',
+          audio_url: getResponseData.audio_url,
+        },
+        ...(DID_API.service === 'clips' && {
+          background: {
+            color: '#FFFFFF',
+          },
+        }),
+        config: {
+          stitch: false,
+        },
+        session_id: sessionId,
+      }),
+    });
     if (playResponse.status === 200 && playResponseData.chatMode === 'TextOnly') {
       console.log('User is out of credit, API only return text messages');
       document.getElementById(
         'msgHistory'
-      ).innerHTML += `<span style='opacity:0.5'> ${playResponseData.result}</span><br>`;
+      ).innerHTML += `<span style='opacity:0.5'> ${txtAreaValue}</span><br>`;
+    }
+    } else {
+      const playResponse = await fetchWithRetries(`${DID_API.url}/agents/${agentId}/chat/${chatId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${DID_API.key}`,
+          'Content-Type': 'application/json',
+        },
+              body: JSON.stringify({
+          "streamId": streamId,
+          "sessionId": sessionId,
+          "messages": [
+            {
+              "role": "user",
+              "content": txtAreaValue,
+              "created_at": new Date().toString()
+            }
+          ]
+        }),
+      });
+      const playResponseData = await playResponse.json();
+      if (playResponse.status === 200 && playResponseData.chatMode === 'TextOnly') {
+        console.log('User is out of credit, API only return text messages');
+        document.getElementById(
+          'msgHistory'
+        ).innerHTML += `<span style='opacity:0.5'> ${playResponseData.result}</span><br>`;
+      }
     }
   }
 };
@@ -503,7 +570,10 @@ async function agentsAPIworkflow() {
 const agentsButton = document.getElementById("agents-button")
 agentsButton.onclick = async () => {
   try{
-    const agentsIds = {} = await agentsAPIworkflow()
+    const agentsIds = {}
+    if (agentFlow) {
+      agentsIds = {} = await agentsAPIworkflow()
+    }
     console.log(agentsIds)
     agentId = agentsIds.agentId
     chatId = agentsIds.chatId
