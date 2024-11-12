@@ -66,7 +66,7 @@ connectButton.onclick = async () => {
     const startStreamMessage = {
       type: 'init-stream',
       payload: {
-        source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Noelle_f/v1_image.jpeg',
+        source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
       },
     };
     sendMessage(ws, startStreamMessage);
@@ -120,25 +120,32 @@ startButton.onclick = async () => {
     isStreamReady
   ) {
     const text =
-      'Lily had always been afraid of heights, but today she stood at the edge of a cliff, staring at the ocean far below. She had been dared by her friends to jump, and although her heart pounded in her chest, she was determined not to back down. The salty wind whipped her hair as she took a deep breath, closing her eyes to gather courage.';
+      'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
     const chunks = text.split(' ');
     chunks.push('');
-    for (const chunk of chunks) {
-      console.log('chunk', chunk);
+    for (const [index, chunk] of chunks.entries()) {
       const streamMessage = {
         type: 'stream-text',
         payload: {
           input: chunk,
-          // provider: {
-          //   language: 'English',
-          //   access: 'premium',
-          //   model_id: 'eleven_turbo_v2_5',
-          //   type: 'elevenlabs',
-          //   voice_id: '2EiwWnXFnvU5JabPnv8n',
-          // },
           provider: {
-            type: 'microsoft',
-            voice_id: 'en-US-JennyNeural',
+            type: 'elevenlabs',
+            voice_id: 'g5CIjZEefAph4nQFvHAz',
+          },
+          config: {
+            stitch: true,
+          },
+          //   provider: {
+          //     type: 'microsoft',
+          //     voice_id: 'Daniel Cohen Liv 2024-02-26Neural',
+          //   },
+          apiKeysExternal: {
+            elevenlabs: { key: 'key here' },
+            // microsoft: {
+            //   key: 'key here',
+            //   region: 'westeurope',
+            //   endpointId: 'c886c006-f39d-410d-aa9c-b0ff25c5cbb8',
+            // },
           },
           session_id: sessionId,
           stream_id: streamId,
