@@ -38,7 +38,7 @@ const streamEventLabel = document.getElementById('stream-event-label');
 
 const presenterInputByService = {
   talks: {
-    source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
+    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg',
   },
   clips: {
     presenter_id: 'v2_public_alex@qcvo4gupoy',
@@ -348,7 +348,7 @@ function setStreamVideoElement(stream) {
 }
 
 function playIdleVideo() {
-  idleVideoElement.src = DID_API.service == 'clips' ? 'alex_v2_idle.mp4' : 'or_idle.mp4';
+  idleVideoElement.src = DID_API.service == 'clips' ? 'alex_v2_idle.mp4' : 'emma_idle.mp4';
 }
 
 function stopAllStreams() {
