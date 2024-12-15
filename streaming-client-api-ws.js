@@ -46,6 +46,8 @@ const presenterInputByService = {
   },
 };
 
+const PRESENTER_TYPE = 'clip'
+
 const connectButton = document.getElementById('connect-button');
 let ws;
 
@@ -66,7 +68,15 @@ connectButton.onclick = async () => {
     const startStreamMessage = {
       type: 'init-stream',
       payload: {
-        source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
+        // source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
+        presenter_id: "v2_public_lucas@aswtxwoss5",
+        // presenter_id: "v2_public_custom_wunderkind_tim@_rrfhti01s",
+        // driver_id: "mzktuab8x5",
+
+        // driver_id: "wvbkvm_94f",
+        // presenter_id: 'rian-lZC6MmWfC1',
+        // driver_id: 'mXra4jY38i',
+        presenter_type: PRESENTER_TYPE,
       },
     };
     sendMessage(ws, startStreamMessage);
@@ -93,6 +103,7 @@ connectButton.onclick = async () => {
             answer: sessionClientAnswer,
             session_id: sessionId,
             // stream_id: streamId,
+            presenter_type: PRESENTER_TYPE
           },
         };
         sendMessage(ws, sdpMessage);
@@ -111,14 +122,60 @@ connectButton.onclick = async () => {
   }
 };
 
-const startButton = document.getElementById('start-button');
-startButton.onclick = async () => {
+const streamAudioButton = document.getElementById('stream-audio-button');
+streamAudioButton.onclick = async () => {
   // connectionState not supported in firefox
 
   if (
     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
     isStreamReady
   ) {
+    const response = await fetch('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/AgentsTeam/streamAudio.wav');
+    if (!response.ok) throw new Error(`Failed to fetch audio file: ${response.statusText}`);
+
+    // Read the ArrayBuffer from the response
+    const arrayBuffer = await response.arrayBuffer();
+    const chunkSize = 1024 * 3; // Chunk size in bytes (1KB per chunk)
+    const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
+    console.log(`File size: ${arrayBuffer.byteLength} bytes, Total chunks: ${totalChunks}`);
+    const now = Date.now();
+    for (let chunkIndex = 0; chunkIndex < totalChunks + 1; chunkIndex++) {
+        const start = chunkIndex * chunkSize;
+        const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
+        let chunk;
+        if (chunkIndex === totalChunks) {
+            // End of stream for audio
+            chunk = Array.from(new Uint8Array(0));
+        } else {
+            chunk = new Uint8Array(arrayBuffer.slice(start, end));
+        }
+        console.log(`Streaming chunk ${chunkIndex + 1}/${totalChunks}, size: ${chunk.length} bytes`);
+        const streamMessage = {
+            type: 'stream-audio',
+            payload: {
+                input: Array.from(chunk),
+                config: {
+                    stitch: true,
+                },
+                background: {
+                    color: '#FFFFFF',
+                },
+                session_id: sessionId,
+                stream_id: streamId,
+                presenter_type: PRESENTER_TYPE
+            },
+        
+        }
+        sendMessage(ws, streamMessage);
+        ws.onmessage = async (event) => {
+            console.log('Stream message received:', event.data);
+        };
+    }
+  }
+}
+
+const streamWordButton = document.getElementById('stream-word-button');
+streamWordButton.onclick = async () => {
     const text =
       'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
     const chunks = text.split(' ');
@@ -130,25 +187,35 @@ startButton.onclick = async () => {
           input: chunk,
           provider: {
             type: 'elevenlabs',
-            voice_id: 'g5CIjZEefAph4nQFvHAz',
+            voice_id: '21m00Tcm4TlvDq8ikWAM',
           },
+        //   provider: {
+        //     type: 'elevenlabs',
+        //     voice_id: '21m00Tcm4TlvDq8ikWAM',
+        //   },
           config: {
             stitch: true,
           },
-          //   provider: {
-          //     type: 'microsoft',
-          //     voice_id: 'Daniel Cohen Liv 2024-02-26Neural',
-          //   },
-          apiKeysExternal: {
-            elevenlabs: { key: 'key here' },
-            // microsoft: {
-            //   key: 'key here',
-            //   region: 'westeurope',
-            //   endpointId: 'c886c006-f39d-410d-aa9c-b0ff25c5cbb8',
+            // provider: {
+            //   type: 'microsoft',
+            //   voice_id: 'en-AU-WilliamNeural',
             // },
+          apiKeysExternal: {
+            elevenlabs: { key: '' },
+        //     microsoft: {
+        //     key: 'key here',
+        //     region: 'westeurope',
+        //     endpointId: 'c886c006-f39d-410d-aa9c-b0ff25c5cbb8',
+        //     },
           },
+        //   clipData: {
+            background: {
+                color: '#FFFFFF',
+            },
+        //   },
           session_id: sessionId,
           stream_id: streamId,
+          presenter_type: PRESENTER_TYPE
         },
       };
       sendMessage(ws, streamMessage);
@@ -156,7 +223,6 @@ startButton.onclick = async () => {
         console.log('Stream message received:', event.data);
       };
     }
-  }
 };
 
 const destroyButton = document.getElementById('destroy-button');
@@ -204,6 +270,7 @@ function onIceCandidate(event) {
       payload: {
         stream_id: streamId,
         session_id: sessionId,
+        presenter_type: PRESENTER_TYPE
       },
     });
     ws.onmessage = async (event) => {
