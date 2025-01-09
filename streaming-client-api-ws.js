@@ -46,7 +46,7 @@ const presenterInputByService = {
   },
 };
 
-const PRESENTER_TYPE = 'clip'
+const PRESENTER_TYPE = 'talk'
 
 const connectButton = document.getElementById('connect-button');
 let ws;
@@ -68,10 +68,12 @@ connectButton.onclick = async () => {
     const startStreamMessage = {
       type: 'init-stream',
       payload: {
-        // source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
-        presenter_id: "v2_public_lucas@aswtxwoss5",
-        // presenter_id: "v2_public_custom_wunderkind_tim@_rrfhti01s",
-        // driver_id: "mzktuab8x5",
+        source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
+        // presenter_id: "v2_public_custom_d_id_santa@a0qu7xwvkd",
+        // presenter_id: "v2_private_custom_terraquantum_woman@eihz9frmlt",
+        // presenter_id: "v2_custom_terraquantum_woman@eihz9frmlt",
+        // driver_id: "qbjnnuexec",
+        // driver_id: "qbjnnuexec",
 
         // driver_id: "wvbkvm_94f",
         // presenter_id: 'rian-lZC6MmWfC1',
@@ -130,7 +132,7 @@ streamAudioButton.onclick = async () => {
     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
     isStreamReady
   ) {
-    const response = await fetch('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/AgentsTeam/streamAudio.wav');
+    const response = await fetch('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/AgentsTeam/tts_generated.mp3');
     if (!response.ok) throw new Error(`Failed to fetch audio file: ${response.statusText}`);
 
     // Read the ArrayBuffer from the response
@@ -179,6 +181,14 @@ streamWordButton.onclick = async () => {
     const text =
       'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
     const chunks = text.split(' ');
+    // const chunks = text.split(' ').reduce((acc, word, index) => {
+    //     const chunkIndex = Math.floor(index / 6); // Group every 6 words
+    //     if (!acc[chunkIndex]) {
+    //       acc[chunkIndex] = []; // Create a new array for the current chunk
+    //     }
+    //     acc[chunkIndex].push(word);
+    //     return acc;
+    //   }, []).map(chunk => chunk.join(' '));
     chunks.push('');
     for (const [index, chunk] of chunks.entries()) {
       const streamMessage = {
