@@ -65,23 +65,23 @@ connectButton.onclick = async () => {
     console.log('WebSocket ws', ws);
 
     // Step 2: Send "init-stream" message to WebSocket
-    // const startStreamMessage = {
-    //   type: 'init-stream',
-    //   payload: {
-    //     source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
-    //     // presenter_id: "v2_public_custom_d_id_santa@a0qu7xwvkd",
-    //     // presenter_id: "v2_private_custom_terraquantum_woman@eihz9frmlt",
-    //     // presenter_id: "v2_custom_terraquantum_woman@eihz9frmlt",
-    //     // driver_id: "qbjnnuexec",
-    //     // driver_id: "qbjnnuexec",
+    const startStreamMessage = {
+      type: 'init-stream',
+      payload: {
+        source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
+        // presenter_id: "v2_public_custom_d_id_santa@a0qu7xwvkd",
+        // presenter_id: "v2_private_custom_terraquantum_woman@eihz9frmlt",
+        // presenter_id: "v2_custom_terraquantum_woman@eihz9frmlt",
+        // driver_id: "qbjnnuexec",
+        // driver_id: "qbjnnuexec",
 
-    //     // driver_id: "wvbkvm_94f",
-    //     // presenter_id: 'rian-lZC6MmWfC1',
-    //     // driver_id: 'mXra4jY38i',
-    //     presenter_type: PRESENTER_TYPE,
-    //   },
-    // };
-    // sendMessage(ws, startStreamMessage);
+        // driver_id: "wvbkvm_94f",
+        // presenter_id: 'rian-lZC6MmWfC1',
+        // driver_id: 'mXra4jY38i',
+        presenter_type: PRESENTER_TYPE,
+      },
+    };
+    sendMessage(ws, startStreamMessage);
 
     ws.onopen = async (event) => {
       console.log('WebSocket connection opened.', { connectionId: ws.url.split('/').pop()?.split('?')[0], event });
