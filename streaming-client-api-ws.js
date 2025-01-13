@@ -181,7 +181,6 @@ streamAudioButton.onclick = async () => {
 
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
-  console.log('streamWordButton clicked');
   const text =
     'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
   const chunks = text.split(' ');

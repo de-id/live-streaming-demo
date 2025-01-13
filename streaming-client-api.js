@@ -37,15 +37,15 @@ const signalingStatusLabel = document.getElementById('signaling-status-label');
 const streamingStatusLabel = document.getElementById('streaming-status-label');
 const streamEventLabel = document.getElementById('stream-event-label');
 
-const PRESENTER_TYPE = 'talk';
+const PRESENTER_TYPE = 'clip';
 
 const presenterInputByService = {
   talks: {
     source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
   },
   clips: {
-    presenter_id: 'rian-lZC6MmWfC1',
-    driver_id: 'mXra4jY38i',
+    presenter_id: 'v2_private_google_oauth2_104801735175324515033@SyT5o7jAMf',
+    driver_id: 'QNy9KesfFk',
   },
 };
 
