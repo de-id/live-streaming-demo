@@ -41,7 +41,7 @@ const PRESENTER_TYPE = 'talk';
 
 const presenterInputByService = {
   talks: {
-    source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
+    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
   },
   clips: {
     presenter_id: 'rian-lZC6MmWfC1',
