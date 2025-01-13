@@ -1,6 +1,6 @@
 'use strict';
-const fetchJsonFile = await fetch("./api.json")
-const DID_API = await fetchJsonFile.json()
+const fetchJsonFile = await fetch('./api.json');
+const DID_API = await fetchJsonFile.json();
 
 if (DID_API.key == '🤫') alert('Please put your api key inside ./api.json and restart..');
 
@@ -10,16 +10,17 @@ const RTCPeerConnection = (
   window.mozRTCPeerConnection
 ).bind(window);
 
-let peerConnection;
-let pcDataChannel;
-let streamId;
-let sessionId;
-let sessionClientAnswer;
-
-let statsIntervalId;
-let lastBytesReceived;
-let videoIsPlaying = false;
-let streamVideoOpacity = 0;
+let peerConnection,
+  pcDataChannel,
+  streamId,
+  sessionId,
+  sessionClientAnswer,
+  ws,
+  connectionId,
+  statsIntervalId,
+  lastBytesReceived,
+  videoIsPlaying = false,
+  streamVideoOpacity = 0;
 
 // Set this variable to true to request stream warmup upon connection to mitigate potential jittering issues
 const stream_warmup = true;
@@ -35,6 +36,8 @@ const iceGatheringStatusLabel = document.getElementById('ice-gathering-status-la
 const signalingStatusLabel = document.getElementById('signaling-status-label');
 const streamingStatusLabel = document.getElementById('streaming-status-label');
 const streamEventLabel = document.getElementById('stream-event-label');
+
+const PRESENTER_TYPE = 'talk';
 
 const presenterInputByService = {
   talks: {
@@ -73,6 +76,9 @@ connectButton.onclick = async () => {
   streamId = newStreamId;
   sessionId = newSessionId;
 
+  ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.key);
+  console.log('HAPPENED! WebSocket ws', ws);
+
   try {
     sessionClientAnswer = await createPeerConnection(offer, iceServers);
   } catch (e) {
@@ -95,37 +101,37 @@ connectButton.onclick = async () => {
   });
 };
 
-const startButton = document.getElementById('start-button');
-startButton.onclick = async () => {
-  // connectionState not supported in firefox
-  if (
-    (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
-    isStreamReady
-  ) {
-    const playResponse = await fetchWithRetries(`${DID_API.url}/${DID_API.service}/streams/${streamId}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${DID_API.key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        script: {
-          type: 'audio',
-          audio_url: 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
-        },
-        ...(DID_API.service === 'clips' && {
-          background: {
-            color: '#FFFFFF',
-          },
-        }),
-        config: {
-          stitch: true,
-        },
-        session_id: sessionId,
-      }),
-    });
-  }
-};
+// const startButton = document.getElementById('start-button');
+// startButton.onclick = async () => {
+//   // connectionState not supported in firefox
+//   if (
+//     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
+//     isStreamReady
+//   ) {
+//     const playResponse = await fetchWithRetries(`${DID_API.url}/${DID_API.service}/streams/${streamId}`, {
+//       method: 'POST',
+//       headers: {
+//         Authorization: `Basic ${DID_API.key}`,
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify({
+//         script: {
+//           type: 'audio',
+//           audio_url: 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
+//         },
+//         ...(DID_API.service === 'clips' && {
+//           background: {
+//             color: '#FFFFFF',
+//           },
+//         }),
+//         config: {
+//           stitch: true,
+//         },
+//         session_id: sessionId,
+//       }),
+//     });
+//   }
+// };
 
 const destroyButton = document.getElementById('destroy-button');
 destroyButton.onclick = async () => {
@@ -140,6 +146,67 @@ destroyButton.onclick = async () => {
 
   stopAllStreams();
   closePC();
+};
+
+const streamWordButton = document.getElementById('stream-word-button');
+streamWordButton.onclick = async () => {
+  console.log('clicked stream word button', { sessionId, streamId });
+  const text =
+    'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
+  const chunks = text.split(' ');
+  // const chunks = text.split(' ').reduce((acc, word, index) => {
+  //     const chunkIndex = Math.floor(index / 6); // Group every 6 words
+  //     if (!acc[chunkIndex]) {
+  //       acc[chunkIndex] = []; // Create a new array for the current chunk
+  //     }
+  //     acc[chunkIndex].push(word);
+  //     return acc;
+  //   }, []).map(chunk => chunk.join(' '));
+  chunks.push('');
+  for (const [index, chunk] of chunks.entries()) {
+    const streamMessage = {
+      type: 'stream-text',
+      payload: {
+        input: chunk,
+        provider: {
+          type: 'elevenlabs',
+          voice_id: '21m00Tcm4TlvDq8ikWAM',
+        },
+        //   provider: {
+        //     type: 'elevenlabs',
+        //     voice_id: '21m00Tcm4TlvDq8ikWAM',
+        //   },
+        config: {
+          stitch: true,
+        },
+        // provider: {
+        //   type: 'microsoft',
+        //   voice_id: 'en-AU-WilliamNeural',
+        // },
+        apiKeysExternal: {
+          elevenlabs: { key: '' },
+          //     microsoft: {
+          //     key: 'key here',
+          //     region: 'westeurope',
+          //     endpointId: 'c886c006-f39d-410d-aa9c-b0ff25c5cbb8',
+          //     },
+        },
+        //   clipData: {
+        background: {
+          color: '#FFFFFF',
+        },
+        //   },
+        session_id: sessionId,
+        stream_id: streamId,
+        presenter_type: PRESENTER_TYPE,
+      },
+    };
+    console.log('HAPPENED! client api', streamMessage);
+    sendMessage(ws, streamMessage);
+    ws.onmessage = async (event) => {
+      console.log('Stream message received:', event.data);
+    };
+  }
 };
 
 function onIceGatheringStateChange() {
@@ -246,7 +313,7 @@ function onTrack(event) {
   statsIntervalId = setInterval(async () => {
     const stats = await peerConnection.getStats(event.track);
     stats.forEach((report) => {
-     if (report.type === 'inbound-rtp' && report.kind === 'video') {
+      if (report.type === 'inbound-rtp' && report.kind === 'video') {
         const videoStatusChanged = videoIsPlaying !== report.bytesReceived > lastBytesReceived;
 
         if (videoStatusChanged) {
@@ -403,5 +470,35 @@ async function fetchWithRetries(url, options, retries = 1) {
     } else {
       throw new Error(`Max retries exceeded. error: ${err}`);
     }
+  }
+}
+
+async function connectToWebSocket(url, token) {
+  return new Promise((resolve, reject) => {
+    const wsUrl = `${url}?authorization=Basic ${encodeURIComponent(token)}`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log('WebSocket connection opened');
+      resolve(ws);
+    };
+
+    ws.onerror = (err) => {
+      console.error('WebSocket error:', err);
+      reject(err);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket connection closed.');
+    };
+  });
+}
+
+function sendMessage(ws, message) {
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(message));
+    console.log('Message sent:', message);
+  } else {
+    console.error('WebSocket is not open. Cannot send message.');
   }
 }

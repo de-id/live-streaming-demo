@@ -1,1 +1,1 @@
-import './streaming-client-api-ws.js';
+import './streaming-client-api.js';
