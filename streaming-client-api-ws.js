@@ -247,9 +247,15 @@ destroyButton.onclick = async () => {
       stream_id: streamId,
     },
   };
+  if (!ws) {
+    console.log('WebSocket is not connected');
+    return;
+  }
   sendMessage(ws, streamMessage);
   ws.onmessage = async (event) => {
     console.log('Stream deleted:', event.data);
+    ws.close();
+    ws = null;
   };
 
   stopAllStreams();

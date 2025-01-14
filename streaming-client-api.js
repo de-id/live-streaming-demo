@@ -76,9 +76,6 @@ connectButton.onclick = async () => {
   streamId = newStreamId;
   sessionId = newSessionId;
 
-  ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.key);
-  console.log('HAPPENED! WebSocket ws', ws);
-
   try {
     sessionClientAnswer = await createPeerConnection(offer, iceServers);
   } catch (e) {
@@ -151,6 +148,9 @@ destroyButton.onclick = async () => {
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
   console.log('clicked stream word button', { sessionId, streamId });
+  ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.key);
+  console.log('HAPPENED! WebSocket ws', ws);
+
   const text =
     'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
   const chunks = text.split(' ');
