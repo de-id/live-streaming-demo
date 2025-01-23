@@ -46,7 +46,7 @@ const presenterInputByService = {
   },
 };
 
-const PRESENTER_TYPE = 'talk'
+const PRESENTER_TYPE = 'talk';
 
 const connectButton = document.getElementById('connect-button');
 let ws;
@@ -105,7 +105,7 @@ connectButton.onclick = async () => {
             answer: sessionClientAnswer,
             session_id: sessionId,
             // stream_id: streamId,
-            presenter_type: PRESENTER_TYPE
+            presenter_type: PRESENTER_TYPE,
           },
         };
         sendMessage(ws, sdpMessage);
@@ -126,113 +126,76 @@ connectButton.onclick = async () => {
 
 const streamAudioButton = document.getElementById('stream-audio-button');
 streamAudioButton.onclick = async () => {
-  // connectionState not supported in firefox
-
   if (
     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
     isStreamReady
   ) {
-    const response = await fetch('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/AgentsTeam/tts_generated.mp3');
-    if (!response.ok) throw new Error(`Failed to fetch audio file: ${response.statusText}`);
-
-    // Read the ArrayBuffer from the response
-    const arrayBuffer = await response.arrayBuffer();
-    const chunkSize = 1024 * 3; // Chunk size in bytes (1KB per chunk)
-    const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
-    console.log(`File size: ${arrayBuffer.byteLength} bytes, Total chunks: ${totalChunks}`);
-    const now = Date.now();
-    for (let chunkIndex = 0; chunkIndex < totalChunks + 1; chunkIndex++) {
-        const start = chunkIndex * chunkSize;
-        const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
-        let chunk;
-        if (chunkIndex === totalChunks) {
-            // End of stream for audio
-            chunk = Array.from(new Uint8Array(0));
-        } else {
-            chunk = new Uint8Array(arrayBuffer.slice(start, end));
-        }
-        console.log(`Streaming chunk ${chunkIndex + 1}/${totalChunks}, size: ${chunk.length} bytes`);
-        const streamMessage = {
-            type: 'stream-audio',
-            payload: {
-                input: Array.from(chunk),
-                config: {
-                    stitch: true,
-                },
-                background: {
-                    color: '#FFFFFF',
-                },
-                session_id: sessionId,
-                stream_id: streamId,
-                presenter_type: PRESENTER_TYPE
-            },
-        
-        }
-        sendMessage(ws, streamMessage);
-        ws.onmessage = async (event) => {
-            console.log('Stream message received:', event.data);
-        };
+    try {
+      const pcmData = await loadPCMData();
+      sendChunkedPCMData(ws, pcmData);
+    } catch (error) {
+      console.error('Error streaming audio:', error);
     }
   }
-}
+};
 
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
-    const text =
-      'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
-    const chunks = text.split(' ');
-    // const chunks = text.split(' ').reduce((acc, word, index) => {
-    //     const chunkIndex = Math.floor(index / 6); // Group every 6 words
-    //     if (!acc[chunkIndex]) {
-    //       acc[chunkIndex] = []; // Create a new array for the current chunk
-    //     }
-    //     acc[chunkIndex].push(word);
-    //     return acc;
-    //   }, []).map(chunk => chunk.join(' '));
-    chunks.push('');
-    for (const [index, chunk] of chunks.entries()) {
-      const streamMessage = {
-        type: 'stream-text',
-        payload: {
-          input: chunk,
-          provider: {
-            type: 'elevenlabs',
-            voice_id: '21m00Tcm4TlvDq8ikWAM',
-          },
+  const text =
+    'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
+  const chunks = text.split(' ');
+  // const chunks = text.split(' ').reduce((acc, word, index) => {
+  //     const chunkIndex = Math.floor(index / 6); // Group every 6 words
+  //     if (!acc[chunkIndex]) {
+  //       acc[chunkIndex] = []; // Create a new array for the current chunk
+  //     }
+  //     acc[chunkIndex].push(word);
+  //     return acc;
+  //   }, []).map(chunk => chunk.join(' '));
+  chunks.push('');
+  for (const [index, chunk] of chunks.entries()) {
+    const streamMessage = {
+      type: 'stream-text',
+      payload: {
+        input: chunk,
+        provider: {
+          type: 'elevenlabs',
+          voice_id: '21m00Tcm4TlvDq8ikWAM',
+        },
         //   provider: {
         //     type: 'elevenlabs',
         //     voice_id: '21m00Tcm4TlvDq8ikWAM',
         //   },
-          config: {
-            stitch: true,
-          },
-            // provider: {
-            //   type: 'microsoft',
-            //   voice_id: 'en-AU-WilliamNeural',
-            // },
-          apiKeysExternal: {
-            elevenlabs: { key: '' },
-        //     microsoft: {
-        //     key: 'key here',
-        //     region: 'westeurope',
-        //     endpointId: 'c886c006-f39d-410d-aa9c-b0ff25c5cbb8',
-        //     },
-          },
-        //   clipData: {
-            background: {
-                color: '#FFFFFF',
-            },
-        //   },
-          session_id: sessionId,
-          stream_id: streamId,
-          presenter_type: PRESENTER_TYPE
+        config: {
+          stitch: true,
         },
-      };
-      sendMessage(ws, streamMessage);
-      ws.onmessage = async (event) => {
-        console.log('Stream message received:', event.data);
-      };
-    }
+        // provider: {
+        //   type: 'microsoft',
+        //   voice_id: 'en-AU-WilliamNeural',
+        // },
+        apiKeysExternal: {
+          elevenlabs: { key: '' },
+          //     microsoft: {
+          //     key: 'key here',
+          //     region: 'westeurope',
+          //     endpointId: 'c886c006-f39d-410d-aa9c-b0ff25c5cbb8',
+          //     },
+        },
+        //   clipData: {
+        background: {
+          color: '#FFFFFF',
+        },
+        //   },
+        session_id: sessionId,
+        stream_id: streamId,
+        presenter_type: PRESENTER_TYPE,
+      },
+    };
+    sendMessage(ws, streamMessage);
+    ws.onmessage = async (event) => {
+      console.log('Stream message received:', event.data);
+    };
+  }
 };
 
 const destroyButton = document.getElementById('destroy-button');
@@ -280,7 +243,7 @@ function onIceCandidate(event) {
       payload: {
         stream_id: streamId,
         session_id: sessionId,
-        presenter_type: PRESENTER_TYPE
+        presenter_type: PRESENTER_TYPE,
       },
     });
     ws.onmessage = async (event) => {
@@ -529,4 +492,89 @@ function sendMessage(ws, message) {
   } else {
     console.error('WebSocket is not open. Cannot send message.');
   }
+}
+
+/**
+ * Load audio-messages-pcm.json and stream audio chunks
+ */
+async function loadPCMData() {
+  const response = await fetch('./audio-messages-pcm.json');
+  if (!response.ok) throw new Error('Failed to load PCM data');
+  const pcmData = await response.json();
+  return pcmData;
+}
+
+function stringToArrayBuffer(string) {
+  const len = string.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = string.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+function base64ToArrayBuffer(base64) {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+function sendSubChunks(ws, delta, chunkSize = 3 * 1024) {
+  const arrayBuffer = base64ToArrayBuffer(delta);
+  const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
+  console.log(`Sub chunk size: ${arrayBuffer.byteLength} bytes, Total chunks: ${totalChunks}`);
+
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
+    const chunk = new Uint8Array(arrayBuffer.slice(start, end));
+    const input = Array.from(chunk);
+    console.log(`Streaming chunk ${i + 1}/${totalChunks}, size: ${chunk.length} bytes`);
+
+    const streamMessage = {
+      type: 'stream-audio',
+      payload: {
+        input,
+        config: {
+          stitch: true,
+        },
+        session_id: sessionId,
+        stream_id: streamId,
+        presenter_type: PRESENTER_TYPE,
+      },
+    };
+    if (input.length === 0) {
+      console.log('ERRORRRRRRR: input is empty in the middle of the stream');
+    } else {
+      sendMessage(ws, streamMessage);
+    }
+  }
+}
+
+function sendChunkedPCMData(ws, pcmData, chunkSize = 3 * 1024) {
+  // const halfwayPoint = Math.floor(pcmData.length / 2);
+  pcmData.forEach((event, count) => {
+    if (event.type === 'response.audio.delta') {
+      console.log(`Send sub chunk, N.${count}`);
+      sendSubChunks(ws, event.delta, chunkSize);
+    } else if (event.type === 'response.audio.done') {
+      console.log('Send last chunk');
+      sendMessage(ws, {
+        type: 'stream-audio',
+        payload: {
+          input: Array.from(new Uint8Array(0)),
+          config: {
+            stitch: true,
+          },
+          session_id: sessionId,
+          stream_id: streamId,
+          presenter_type: PRESENTER_TYPE,
+        },
+      });
+    }
+  });
 }

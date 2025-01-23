@@ -1,5 +1,6 @@
 {
-  "url": "https://api.d-id.com",
-  "websocketUrl": "wss://ws-api.d-id.com",
+  "key": "bmhhbi50cmFuQGRlaWRlbnRpZmljYXRpb24uY28:7cDEilPXb5wTrpgasj7_P",
+  "url": "https://api-dev.d-id.com",
+  "websocketUrl": "wss://ws-api-dev.d-id.com",
   "service": "talks"
 }
