@@ -468,6 +468,7 @@ async function connectToWebSocket(url, token) {
   return new Promise((resolve, reject) => {
     const wsUrl = `${url}?authorization=Basic ${encodeURIComponent(token)}`;
     const ws = new WebSocket(wsUrl);
+    ws.binaryType = 'arraybuffer';
 
     ws.onopen = () => {
       console.log('WebSocket connection opened.');
@@ -506,32 +507,98 @@ async function loadPCMData() {
 
 function stringToArrayBuffer(string) {
   const len = string.length;
-  const bytes = new Uint8Array(len);
+  const bytes = new Uint16Array(len);
   for (let i = 0; i < len; i++) {
     bytes[i] = string.charCodeAt(i);
   }
   return bytes.buffer;
 }
 
+function base64ToArrayBuffer2(base64) {
+  // Decode the base64 string into binary string
+  const binaryString = atob(base64);
+
+  // Create a new ArrayBuffer with the same length as the binary string
+  const buffer = new ArrayBuffer(binaryString.length);
+
+  // Create a view for the ArrayBuffer
+  const view = new Uint8Array(buffer);
+
+  // Populate the ArrayBuffer with the binary data
+  for (let i = 0; i < binaryString.length; i++) {
+      view[i] = binaryString.charCodeAt(i);
+  }
+
+  return buffer;
+}
+
 function base64ToArrayBuffer(base64) {
   const binaryString = atob(base64);
   const len = binaryString.length;
-  const bytes = new Uint8Array(len);
+  const bytes = new Uint16Array(len);
   for (let i = 0; i < len; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
   return bytes.buffer;
 }
 
+function createWavHeader(audioBufferLength, sampleRate = 44100, numChannels = 1) {
+  const header = new ArrayBuffer(44);
+  const view = new DataView(header);
+
+  // RIFF identifier
+  view.setUint32(0, 0x52494646, false);
+  // file length minus RIFF identifier length and file description length
+  view.setUint32(4, 36 + audioBufferLength, true);
+  // RIFF type
+  view.setUint32(8, 0x57415645, false);
+  // format chunk identifier
+  view.setUint32(12, 0x666d7420, false);
+  // format chunk length
+  view.setUint32(16, 16, true);
+  // sample format (raw)
+  view.setUint16(20, 1, true);
+  // channel count
+  view.setUint16(22, numChannels, true);
+  // sample rate
+  view.setUint32(24, sampleRate, true);
+  // byte rate (sample rate * block align)
+  view.setUint32(28, sampleRate * numChannels * 2, true);
+  // block align (channel count * bytes per sample)
+  view.setUint16(32, numChannels * 2, true);
+  // bits per sample
+  view.setUint16(34, 16, true);
+  // data chunk identifier
+  view.setUint32(36, 0x64617461, false);
+  // data chunk length
+  view.setUint32(40, audioBufferLength, true);
+
+  return header;
+}
+
+function concatenateArrayBuffers(buffer1, buffer2) {
+  const tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+  tmp.set(new Uint8Array(buffer1), 0);
+  tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+  return tmp.buffer;
+}
+
+function decodeBase64ToWav(base64Audio) {
+  const audioArrayBuffer = base64ToArrayBuffer(base64Audio);
+  const wavHeader = createWavHeader(audioArrayBuffer.byteLength);
+  const wavArrayBuffer = concatenateArrayBuffers(wavHeader, audioArrayBuffer);
+  return wavArrayBuffer;
+}
+
 function sendSubChunks(ws, delta, chunkSize = 3 * 1024) {
-  const arrayBuffer = base64ToArrayBuffer(delta);
+  const arrayBuffer = decodeBase64ToWav(delta);
   const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
   console.log(`Sub chunk size: ${arrayBuffer.byteLength} bytes, Total chunks: ${totalChunks}`);
 
   for (let i = 0; i < totalChunks; i++) {
     const start = i * chunkSize;
     const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
-    const chunk = new Uint8Array(arrayBuffer.slice(start, end));
+    const chunk = new Uint16Array(arrayBuffer.slice(start, end));
     const input = Array.from(chunk);
     console.log(`Streaming chunk ${i + 1}/${totalChunks}, size: ${chunk.length} bytes`);
 
@@ -566,7 +633,7 @@ function sendChunkedPCMData(ws, pcmData, chunkSize = 3 * 1024) {
       sendMessage(ws, {
         type: 'stream-audio',
         payload: {
-          input: Array.from(new Uint8Array(0)),
+          input: Array.from(new Uint16Array(0)),
           config: {
             stitch: true,
           },
