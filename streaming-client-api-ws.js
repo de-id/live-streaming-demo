@@ -41,8 +41,8 @@ const presenterInputByService = {
     source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
   },
   clips: {
-    presenter_id: "v2_private_google_oauth2_104801735175324515033@SyT5o7jAMf",
-    driver_id: "QNy9KesfFk",
+    presenter_id: 'v2_private_google_oauth2_104801735175324515033@SyT5o7jAMf',
+    driver_id: 'QNy9KesfFk',
   },
 };
 
@@ -69,7 +69,7 @@ connectButton.onclick = async () => {
       type: 'init-stream',
       payload: {
         presenter_type: PRESENTER_TYPE,
-        ...presenterInputByService[DID_API.service]
+        ...presenterInputByService[DID_API.service],
       },
     };
     sendMessage(ws, startStreamMessage);
@@ -96,7 +96,7 @@ connectButton.onclick = async () => {
             answer: sessionClientAnswer,
             session_id: sessionId,
             // stream_id: streamId,
-            presenter_type: PRESENTER_TYPE
+            presenter_type: PRESENTER_TYPE,
           },
         };
         sendMessage(ws, sdpMessage);
@@ -133,81 +133,109 @@ streamAudioButton.onclick = async () => {
     console.log(`File size: ${arrayBuffer.byteLength} bytes, Total chunks: ${totalChunks}`);
     const now = Date.now();
     for (let chunkIndex = 0; chunkIndex < totalChunks + 1; chunkIndex++) {
-        const start = chunkIndex * chunkSize;
-        const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
-        let chunk;
-        if (chunkIndex === totalChunks) {
-            // End of stream for audio
-            chunk = Array.from(new Uint8Array(0));
-        } else {
-            chunk = new Uint8Array(arrayBuffer.slice(start, end));
-        }
-        console.log(`Streaming chunk ${chunkIndex + 1}/${totalChunks}, size: ${chunk.length} bytes`);
-        const streamMessage = {
-            type: 'stream-audio',
-            payload: {
-                input: Array.from(chunk),
-                config: {
-                    stitch: true,
-                },
-                session_id: sessionId,
-                stream_id: streamId,
-                presenter_type: PRESENTER_TYPE
-            },
-        
-        }
-        sendMessage(ws, streamMessage);
-        ws.onmessage = async (event) => {
-            console.log('Stream message received:', event.data);
-        };
+      const start = chunkIndex * chunkSize;
+      const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
+      let chunk;
+      if (chunkIndex === totalChunks) {
+        // End of stream for audio
+        chunk = Array.from(new Uint8Array(0));
+      } else {
+        chunk = new Uint8Array(arrayBuffer.slice(start, end));
+      }
+      console.log(`Streaming chunk ${chunkIndex + 1}/${totalChunks}, size: ${chunk.length} bytes`);
+      const streamMessage = {
+        type: 'stream-audio',
+        payload: {
+          input: Array.from(chunk),
+          config: {
+            stitch: true,
+          },
+          session_id: sessionId,
+          stream_id: streamId,
+          presenter_type: PRESENTER_TYPE,
+        },
+      };
+
+      const streamMessageV2 = {
+        type: 'stream-audio',
+        payload: {
+          script: {
+            type: 'audio',
+            input: Array.from(chunk),
+          },
+          config: {
+            stitch: true,
+          },
+          session_id: sessionId,
+          stream_id: streamId,
+          presenter_type: PRESENTER_TYPE,
+        },
+      };
+      sendMessage(ws, streamMessageV2);
+      ws.onmessage = async (event) => {
+        console.log('Stream message received:', event.data);
+      };
     }
   }
-}
+};
 
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
-    const text =
-      'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
-    const chunks = text.split(' ');
-    // const chunks = text.split(' ').reduce((acc, word, index) => {
-    //     const chunkIndex = Math.floor(index / 6); // Group every 6 words
-    //     if (!acc[chunkIndex]) {
-    //       acc[chunkIndex] = []; // Create a new array for the current chunk
-    //     }
-    //     acc[chunkIndex].push(word);
-    //     return acc;
-    //   }, []).map(chunk => chunk.join(' '));
-    chunks.push('');
-    for (const [index, chunk] of chunks.entries()) {
-      const streamMessage = {
-        type: 'stream-text',
-        payload: {
+  const text =
+    'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
+  const chunks = text.split(' ');
+
+  // add empty string to the end of the array to indicate the end of the stream
+  chunks.push('');
+
+  for (const [_, chunk] of chunks.entries()) {
+    const streamMessage = {
+      type: 'stream-text',
+      payload: {
+        input: chunk,
+        provider: {
+          type: 'elevenlabs',
+          voice_id: '21m00Tcm4TlvDq8ikWAM',
+        },
+        config: {
+          stitch: true,
+        },
+        apiKeysExternal: {
+          elevenlabs: { key: '' },
+        },
+        session_id: sessionId,
+        stream_id: streamId,
+        presenter_type: PRESENTER_TYPE,
+      },
+    };
+
+    const streamMessageV2 = {
+      type: 'stream-text',
+      payload: {
+        script: {
+          type: 'text',
           input: chunk,
           provider: {
             type: 'elevenlabs',
             voice_id: '21m00Tcm4TlvDq8ikWAM',
           },
-        //   provider: {
-        //     type: 'elevenlabs',
-        //     voice_id: '21m00Tcm4TlvDq8ikWAM',
-        //   },
-          config: {
-            stitch: true,
-          },
-          apiKeysExternal: {
-            elevenlabs: { key: '' },
-        
-          },
-          session_id: sessionId,
-          stream_id: streamId,
-          presenter_type: PRESENTER_TYPE
         },
-      };
-      sendMessage(ws, streamMessage);
-      ws.onmessage = async (event) => {
-        console.log('Stream message received:', event.data);
-      };
-    }
+        config: {
+          stitch: true,
+        },
+        apiKeysExternal: {
+          elevenlabs: { key: '' },
+        },
+        session_id: sessionId,
+        stream_id: streamId,
+        presenter_type: PRESENTER_TYPE,
+      },
+    };
+    sendMessage(ws, streamMessageV2);
+    ws.onmessage = async (event) => {
+      console.log('Stream message received:', event.data);
+    };
+  }
 };
 
 const destroyButton = document.getElementById('destroy-button');
@@ -255,7 +283,7 @@ function onIceCandidate(event) {
       payload: {
         stream_id: streamId,
         session_id: sessionId,
-        presenter_type: PRESENTER_TYPE
+        presenter_type: PRESENTER_TYPE,
       },
     });
     ws.onmessage = async (event) => {
