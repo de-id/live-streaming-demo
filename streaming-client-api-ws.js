@@ -143,20 +143,8 @@ streamAudioButton.onclick = async () => {
         chunk = new Uint8Array(arrayBuffer.slice(start, end));
       }
       console.log(`Streaming chunk ${chunkIndex + 1}/${totalChunks}, size: ${chunk.length} bytes`);
-      const streamMessage = {
-        type: 'stream-audio',
-        payload: {
-          input: Array.from(chunk),
-          config: {
-            stitch: true,
-          },
-          session_id: sessionId,
-          stream_id: streamId,
-          presenter_type: PRESENTER_TYPE,
-        },
-      };
 
-      const streamMessageV2 = {
+      const streamMessage = {
         type: 'stream-audio',
         payload: {
           script: {
@@ -171,7 +159,7 @@ streamAudioButton.onclick = async () => {
           presenter_type: PRESENTER_TYPE,
         },
       };
-      sendMessage(ws, streamMessageV2);
+      sendMessage(ws, streamMessage);
       ws.onmessage = async (event) => {
         console.log('Stream message received:', event.data);
       };
@@ -181,8 +169,7 @@ streamAudioButton.onclick = async () => {
 
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
-  const text =
-    'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
+  const text = 'This is an example of the WebSocket streaming API <break time="1.5s"> Making videos is easy with D-ID';
   const chunks = text.split(' ');
 
   // add empty string to the end of the array to indicate the end of the stream
@@ -192,33 +179,15 @@ streamWordButton.onclick = async () => {
     const streamMessage = {
       type: 'stream-text',
       payload: {
-        input: chunk,
-        provider: {
-          type: 'elevenlabs',
-          voice_id: '21m00Tcm4TlvDq8ikWAM',
-        },
-        config: {
-          stitch: true,
-        },
-        apiKeysExternal: {
-          elevenlabs: { key: '' },
-        },
-        session_id: sessionId,
-        stream_id: streamId,
-        presenter_type: PRESENTER_TYPE,
-      },
-    };
-
-    const streamMessageV2 = {
-      type: 'stream-text',
-      payload: {
         script: {
           type: 'text',
           input: chunk,
           provider: {
             type: 'elevenlabs',
             voice_id: '21m00Tcm4TlvDq8ikWAM',
+            model_id: 'eleven_turbo_v2',
           },
+          ssml: true,
         },
         config: {
           stitch: true,
@@ -231,7 +200,7 @@ streamWordButton.onclick = async () => {
         presenter_type: PRESENTER_TYPE,
       },
     };
-    sendMessage(ws, streamMessageV2);
+    sendMessage(ws, streamMessage);
     ws.onmessage = async (event) => {
       console.log('Stream message received:', event.data);
     };
@@ -463,7 +432,7 @@ function setStreamVideoElement(stream) {
 }
 
 function playIdleVideo() {
-  idleVideoElement.src = DID_API.service == 'clips' ? 'rian_idle.mp4' : 'or_idle.mp4';
+  idleVideoElement.src = DID_API.service == 'clips' ? 'rian_idle.mp4' : 'emma_idle.mp4';
 }
 
 function stopAllStreams() {
