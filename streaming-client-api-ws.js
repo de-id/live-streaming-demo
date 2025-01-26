@@ -62,7 +62,6 @@ connectButton.onclick = async () => {
   try {
     // Step 1: Connect to WebSocket
     ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.key);
-    console.log('WebSocket ws', ws);
 
     // Step 2: Send "init-stream" message to WebSocket
     const startStreamMessage = {
@@ -82,12 +81,8 @@ connectButton.onclick = async () => {
       streamId = newStreamId;
       sessionId = newSessionId;
 
-      console.log('init-stream response', streamId, sessionId);
-
       try {
         sessionClientAnswer = await createPeerConnection(offer, iceServers);
-
-        console.log('got sessionClientAnswer', sessionClientAnswer);
 
         // Step 4: Send SDP answer to WebSocket
         const sdpMessage = {
@@ -100,9 +95,6 @@ connectButton.onclick = async () => {
           },
         };
         sendMessage(ws, sdpMessage);
-        ws.onmessage = async (event) => {
-          console.log('SDP message received:', event.data);
-        };
       } catch (e) {
         console.log('Error during streaming setup', e);
         stopAllStreams();
@@ -130,19 +122,18 @@ streamAudioButton.onclick = async () => {
     const arrayBuffer = await response.arrayBuffer();
     const chunkSize = 1024 * 3; // Chunk size in bytes (1KB per chunk)
     const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
-    console.log(`File size: ${arrayBuffer.byteLength} bytes, Total chunks: ${totalChunks}`);
-    const now = Date.now();
+
     for (let chunkIndex = 0; chunkIndex < totalChunks + 1; chunkIndex++) {
       const start = chunkIndex * chunkSize;
       const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
       let chunk;
       if (chunkIndex === totalChunks) {
-        // End of stream for audio
+        //  todo : put in a function with text
+        // add empty array to indicate the end of the audio stream
         chunk = Array.from(new Uint8Array(0));
       } else {
         chunk = new Uint8Array(arrayBuffer.slice(start, end));
       }
-      console.log(`Streaming chunk ${chunkIndex + 1}/${totalChunks}, size: ${chunk.length} bytes`);
 
       const streamMessage = {
         type: 'stream-audio',
@@ -160,9 +151,6 @@ streamAudioButton.onclick = async () => {
         },
       };
       sendMessage(ws, streamMessage);
-      ws.onmessage = async (event) => {
-        console.log('Stream message received:', event.data);
-      };
     }
   }
 };
@@ -201,9 +189,6 @@ streamWordButton.onclick = async () => {
       },
     };
     sendMessage(ws, streamMessage);
-    ws.onmessage = async (event) => {
-      console.log('Stream message received:', event.data);
-    };
   }
 };
 
@@ -243,9 +228,6 @@ function onIceCandidate(event) {
         sdpMLineIndex,
       },
     });
-    ws.onmessage = async (event) => {
-      console.log('Ice message received:', event.data);
-    };
   } else {
     sendMessage(ws, {
       type: 'ice',
@@ -255,9 +237,6 @@ function onIceCandidate(event) {
         presenter_type: PRESENTER_TYPE,
       },
     });
-    ws.onmessage = async (event) => {
-      console.log('Ice message received on else:', event.data);
-    };
   }
 }
 function onIceConnectionStateChange() {
@@ -272,7 +251,6 @@ function onConnectionStateChange() {
   // not supported in firefox
   peerStatusLabel.innerText = peerConnection.connectionState;
   peerStatusLabel.className = 'peerConnectionState-' + peerConnection.connectionState;
-  console.log('peerConnection', peerConnection.connectionState);
 
   if (peerConnection.connectionState === 'connected') {
     playIdleVideo();
@@ -497,7 +475,6 @@ async function connectToWebSocket(url, token) {
 function sendMessage(ws, message) {
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(message));
-    console.log('Message sent:', message);
   } else {
     console.error('WebSocket is not open. Cannot send message.');
   }
