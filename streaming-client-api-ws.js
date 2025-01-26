@@ -41,8 +41,8 @@ const presenterInputByService = {
     source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
   },
   clips: {
-    presenter_id: 'rian-lZC6MmWfC1',
-    driver_id: 'mXra4jY38i',
+    presenter_id: "v2_private_google_oauth2_104801735175324515033@SyT5o7jAMf",
+    driver_id: "QNy9KesfFk",
   },
 };
 
@@ -159,9 +159,6 @@ streamAudioButton.onclick = async () => {
                 config: {
                     stitch: true,
                 },
-                background: {
-                    color: '#FFFFFF',
-                },
                 session_id: sessionId,
                 stream_id: streamId,
                 presenter_type: PRESENTER_TYPE
@@ -206,23 +203,10 @@ streamWordButton.onclick = async () => {
           config: {
             stitch: true,
           },
-            // provider: {
-            //   type: 'microsoft',
-            //   voice_id: 'en-AU-WilliamNeural',
-            // },
           apiKeysExternal: {
             elevenlabs: { key: '' },
-        //     microsoft: {
-        //     key: 'key here',
-        //     region: 'westeurope',
-        //     endpointId: 'c886c006-f39d-410d-aa9c-b0ff25c5cbb8',
-        //     },
+        
           },
-        //   clipData: {
-            background: {
-                color: '#FFFFFF',
-            },
-        //   },
           session_id: sessionId,
           stream_id: streamId,
           presenter_type: PRESENTER_TYPE
