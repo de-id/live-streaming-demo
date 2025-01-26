@@ -38,7 +38,7 @@ const streamEventLabel = document.getElementById('stream-event-label');
 
 const presenterInputByService = {
   talks: {
-    source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
+    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
   },
   clips: {
     presenter_id: "v2_private_google_oauth2_104801735175324515033@SyT5o7jAMf",
@@ -46,7 +46,7 @@ const presenterInputByService = {
   },
 };
 
-const PRESENTER_TYPE = 'talk'
+const PRESENTER_TYPE = DID_API.service == 'talks' ? 'talk' : 'clip';
 
 const connectButton = document.getElementById('connect-button');
 let ws;
@@ -68,17 +68,8 @@ connectButton.onclick = async () => {
     const startStreamMessage = {
       type: 'init-stream',
       payload: {
-        source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
-        // presenter_id: "v2_public_custom_d_id_santa@a0qu7xwvkd",
-        // presenter_id: "v2_private_custom_terraquantum_woman@eihz9frmlt",
-        // presenter_id: "v2_custom_terraquantum_woman@eihz9frmlt",
-        // driver_id: "qbjnnuexec",
-        // driver_id: "qbjnnuexec",
-
-        // driver_id: "wvbkvm_94f",
-        // presenter_id: 'rian-lZC6MmWfC1',
-        // driver_id: 'mXra4jY38i',
         presenter_type: PRESENTER_TYPE,
+        ...presenterInputByService[DID_API.service]
       },
     };
     sendMessage(ws, startStreamMessage);
