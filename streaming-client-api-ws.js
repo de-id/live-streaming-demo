@@ -87,15 +87,12 @@ connectButton.onclick = async () => {
       try {
         sessionClientAnswer = await createPeerConnection(offer, iceServers);
 
-        console.log('got sessionClientAnswer', sessionClientAnswer);
-
         // Step 4: Send SDP answer to WebSocket
         const sdpMessage = {
           type: 'sdp',
           payload: {
             answer: sessionClientAnswer,
             session_id: sessionId,
-            // stream_id: streamId,
             presenter_type: PRESENTER_TYPE,
           },
         };
@@ -104,7 +101,7 @@ connectButton.onclick = async () => {
           console.log('SDP message received:', event.data);
         };
       } catch (e) {
-        console.log('Error during streaming setup', e);
+        console.error('Error during streaming setup', e);
         stopAllStreams();
         closePC();
         return;
@@ -117,7 +114,7 @@ connectButton.onclick = async () => {
 
 const streamAudioButton = document.getElementById('stream-audio-button');
 streamAudioButton.onclick = async () => {
-  // connectionState not supported in firefox
+  // note : connectionState is not supported in firefox
 
   if (
     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
@@ -128,21 +125,20 @@ streamAudioButton.onclick = async () => {
 
     // Read the ArrayBuffer from the response
     const arrayBuffer = await response.arrayBuffer();
-    const chunkSize = 1024 * 3; // Chunk size in bytes (1KB per chunk)
+    // Chunk size in bytes (1KB per chunk)
+    const chunkSize = 1024 * 3;
     const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
-    console.log(`File size: ${arrayBuffer.byteLength} bytes, Total chunks: ${totalChunks}`);
-    const now = Date.now();
+
     for (let chunkIndex = 0; chunkIndex < totalChunks + 1; chunkIndex++) {
       const start = chunkIndex * chunkSize;
       const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
       let chunk;
       if (chunkIndex === totalChunks) {
-        // End of stream for audio
-        chunk = Array.from(new Uint8Array(0));
+        // Indicates end of audio stream
+        chunk = new Uint8Array(0);
       } else {
         chunk = new Uint8Array(arrayBuffer.slice(start, end));
       }
-      console.log(`Streaming chunk ${chunkIndex + 1}/${totalChunks}, size: ${chunk.length} bytes`);
       const streamMessage = {
         type: 'stream-audio',
         payload: {
@@ -159,27 +155,18 @@ streamAudioButton.onclick = async () => {
         },
       };
       sendMessage(ws, streamMessage);
-      ws.onmessage = async (event) => {
-        console.log('Stream message received:', event.data);
-      };
     }
   }
 };
 
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
-  const text =
-    'In a quiet little town, there stood an old brick school with ivy creeping up its walls. Inside, the halls buzzed with the sounds of chattering students and echoing footsteps. ';
+  const text = 'This is an example of the WebSocket streaming API <break time="1.5s"> Making videos is easy with D-ID';
   const chunks = text.split(' ');
-  // const chunks = text.split(' ').reduce((acc, word, index) => {
-  //     const chunkIndex = Math.floor(index / 6); // Group every 6 words
-  //     if (!acc[chunkIndex]) {
-  //       acc[chunkIndex] = []; // Create a new array for the current chunk
-  //     }
-  //     acc[chunkIndex].push(word);
-  //     return acc;
-  //   }, []).map(chunk => chunk.join(' '));
+
+  // Indicates end of text stream
   chunks.push('');
+
   for (const [index, chunk] of chunks.entries()) {
     const streamMessage = {
       type: 'stream-text',
@@ -189,39 +176,21 @@ streamWordButton.onclick = async () => {
           type: 'elevenlabs',
           voice_id: '21m00Tcm4TlvDq8ikWAM',
         },
-        //   provider: {
-        //     type: 'elevenlabs',
-        //     voice_id: '21m00Tcm4TlvDq8ikWAM',
-        //   },
         config: {
           stitch: true,
         },
-        // provider: {
-        //   type: 'microsoft',
-        //   voice_id: 'en-AU-WilliamNeural',
-        // },
         apiKeysExternal: {
           elevenlabs: { key: '' },
-          //     microsoft: {
-          //     key: 'key here',
-          //     region: 'westeurope',
-          //     endpointId: 'c886c006-f39d-410d-aa9c-b0ff25c5cbb8',
-          //     },
         },
-        //   clipData: {
         background: {
           color: '#FFFFFF',
         },
-        //   },
         session_id: sessionId,
         stream_id: streamId,
         presenter_type: PRESENTER_TYPE,
       },
     };
     sendMessage(ws, streamMessage);
-    ws.onmessage = async (event) => {
-      console.log('Stream message received:', event.data);
-    };
   }
 };
 
