@@ -158,7 +158,7 @@ streamAudioButton.onclick = async () => {
 
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
-  const text = 'This is an example of the WebSocket streaming API <break time="1.5s"> Making videos is easy with D-ID';
+  const text = 'This is an example of the WebSocket streaming API, Making videos is easy with D-ID';
   const chunks = text.split(' ');
 
   // Indicates end of text stream
