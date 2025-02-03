@@ -73,35 +73,42 @@ connectButton.onclick = async () => {
     };
     sendMessage(ws, startStreamMessage);
 
-    // Step 3: Handle WebSocket response for "init-stream"
+    // Step 3: Handle WebSocket responses by message type
     ws.onmessage = async (event) => {
       const data = JSON.parse(event.data);
+      switch (data.messageType) {
+        case 'init-stream':
+          const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = data;
+          streamId = newStreamId;
+          sessionId = newSessionId;
 
-      const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = data;
-      streamId = newStreamId;
-      sessionId = newSessionId;
+          try {
+            sessionClientAnswer = await createPeerConnection(offer, iceServers);
+            // Step 4: Send SDP answer to WebSocket
+            const sdpMessage = {
+              type: 'sdp',
+              payload: {
+                answer: sessionClientAnswer,
+                session_id: sessionId,
+                presenter_type: PRESENTER_TYPE,
+              },
+            };
+            sendMessage(ws, sdpMessage);
+          } catch (e) {
+            console.error('Error during streaming setup', e);
+            stopAllStreams();
+            closePC();
+            return;
+          }
+          break;
 
-      try {
-        sessionClientAnswer = await createPeerConnection(offer, iceServers);
-
-        // Step 4: Send SDP answer to WebSocket
-        const sdpMessage = {
-          type: 'sdp',
-          payload: {
-            answer: sessionClientAnswer,
-            session_id: sessionId,
-            presenter_type: PRESENTER_TYPE,
-          },
-        };
-        sendMessage(ws, sdpMessage);
-        ws.onmessage = async (event) => {
+        case 'sdp':
           console.log('SDP message received:', event.data);
-        };
-      } catch (e) {
-        console.error('Error during streaming setup', e);
-        stopAllStreams();
-        closePC();
-        return;
+          break;
+
+        case 'delete-stream':
+          console.log('Stream deleted:', event.data);
+          break;
       }
     };
   } catch (error) {
@@ -168,9 +175,6 @@ destroyButton.onclick = async () => {
     },
   };
   sendMessage(ws, streamMessage);
-  ws.onmessage = async (event) => {
-    console.log('Stream deleted:', event.data);
-  };
 
   stopAllStreams();
   closePC();
@@ -180,6 +184,7 @@ function onIceGatheringStateChange() {
   iceGatheringStatusLabel.innerText = peerConnection.iceGatheringState;
   iceGatheringStatusLabel.className = 'iceGatheringState-' + peerConnection.iceGatheringState;
 }
+
 function onIceCandidate(event) {
   console.log('onIceCandidate', event);
   if (event.candidate) {
@@ -187,7 +192,6 @@ function onIceCandidate(event) {
     sendMessage(ws, {
       type: 'ice',
       payload: {
-        // stream_id: streamId,
         session_id: sessionId,
         candidate,
         sdpMid,
@@ -399,7 +403,7 @@ function closePC(pc = peerConnection) {
   pc.removeEventListener('connectionstatechange', onConnectionStateChange, true);
   pc.removeEventListener('signalingstatechange', onSignalingStateChange, true);
   pc.removeEventListener('track', onTrack, true);
-  pc.removeEventListener('onmessage', onStreamEvent, true);
+  pc.removeEventListener('message', onStreamEvent, true);
 
   clearInterval(statsIntervalId);
   isStreamReady = !stream_warmup;
