@@ -62,7 +62,6 @@ connectButton.onclick = async () => {
   try {
     // Step 1: Connect to WebSocket
     ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.key);
-    console.log('WebSocket ws', ws);
 
     // Step 2: Send "init-stream" message to WebSocket
     const startStreamMessage = {
@@ -81,8 +80,6 @@ connectButton.onclick = async () => {
       const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = data;
       streamId = newStreamId;
       sessionId = newSessionId;
-
-      console.log('init-stream response', streamId, sessionId);
 
       try {
         sessionClientAnswer = await createPeerConnection(offer, iceServers);
@@ -230,9 +227,6 @@ function onIceCandidate(event) {
         sdpMLineIndex,
       },
     });
-    ws.onmessage = async (event) => {
-      console.log('Ice message received:', event.data);
-    };
   } else {
     sendMessage(ws, {
       type: 'ice',
@@ -242,9 +236,6 @@ function onIceCandidate(event) {
         presenter_type: PRESENTER_TYPE,
       },
     });
-    ws.onmessage = async (event) => {
-      console.log('Ice message received on else:', event.data);
-    };
   }
 }
 function onIceConnectionStateChange() {
@@ -484,7 +475,6 @@ async function connectToWebSocket(url, token) {
 function sendMessage(ws, message) {
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(message));
-    console.log('Message sent:', message);
   } else {
     console.error('WebSocket is not open. Cannot send message.');
   }
