@@ -25,7 +25,7 @@
 
 ## ⭐ Start Websocket Demo [NEW!] ⭐
 
-- There are 2 options for websocket application. Option 1 is to use websocket on client side, and make connection to the websocket directly. Option 2 is to use proxy server to handle websocket requests.
-- Input the right value of websocket url and token in the api.json (option 1) or .env file (for option 2)
-- Option 1: run yarn dev
-- Option 2: run node server.js (and open http://localhost/3000/ws)
+- Add websocket url and token to the api.json (option 1) or .env file
+- input streaming audio or text can be done in 2 ways: connect with a webrtc client and create a websocket connection to stream the request (stream-text / stream-audio) or create a websocket connection and
+- send all requests through this connection: init-stream / sdp, etc.
+- run: yarn dev
