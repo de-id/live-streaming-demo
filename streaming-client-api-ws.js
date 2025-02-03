@@ -111,47 +111,14 @@ connectButton.onclick = async () => {
 
 const streamAudioButton = document.getElementById('stream-audio-button');
 streamAudioButton.onclick = async () => {
-  // note : connectionState is not supported in firefox
-
   if (
     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
     isStreamReady
   ) {
-    const response = await fetch('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/AgentsTeam/tts_generated.mp3');
-    if (!response.ok) throw new Error(`Failed to fetch audio file: ${response.statusText}`);
-
-    // Read the ArrayBuffer from the response
-    const arrayBuffer = await response.arrayBuffer();
-    // Chunk size in bytes (1KB per chunk)
-    const chunkSize = 1024 * 3;
-    const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
-
-    for (let chunkIndex = 0; chunkIndex < totalChunks + 1; chunkIndex++) {
-      const start = chunkIndex * chunkSize;
-      const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
-      let chunk;
-      if (chunkIndex === totalChunks) {
-        // Indicates end of audio stream
-        chunk = new Uint8Array(0);
-      } else {
-        chunk = new Uint8Array(arrayBuffer.slice(start, end));
-      }
-      const streamMessage = {
-        type: 'stream-audio',
-        payload: {
-          input: Array.from(chunk),
-          config: {
-            stitch: true,
-          },
-          background: {
-            color: '#FFFFFF',
-          },
-          session_id: sessionId,
-          stream_id: streamId,
-          presenter_type: PRESENTER_TYPE,
-        },
-      };
-      sendMessage(ws, streamMessage);
+    try {
+      await streamAudioInChunks('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/AgentsTeam/tts_generated.mp3');
+    } catch (error) {
+      console.error('Error streaming audio:', error);
     }
   }
 };
@@ -164,7 +131,7 @@ streamWordButton.onclick = async () => {
   // Indicates end of text stream
   chunks.push('');
 
-  for (const [index, chunk] of chunks.entries()) {
+  for (const [_, chunk] of chunks.entries()) {
     const streamMessage = {
       type: 'stream-text',
       payload: {
@@ -478,4 +445,49 @@ function sendMessage(ws, message) {
   } else {
     console.error('WebSocket is not open. Cannot send message.');
   }
+}
+
+async function streamAudioInChunks(audioUrl, chunkSize = 1024 * 3) {
+  const response = await fetch(audioUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch audio file: ${response.statusText}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
+
+  for (let chunkIndex = 0; chunkIndex < totalChunks + 1; chunkIndex++) {
+    const chunk = getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize);
+    sendStreamMessage(chunk);
+  }
+}
+
+function getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize) {
+  if (chunkIndex === totalChunks) {
+    return new Uint8Array(0); // Indicates end of audio stream
+  }
+
+  const start = chunkIndex * chunkSize;
+  const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
+  return new Uint8Array(arrayBuffer.slice(start, end));
+}
+
+function sendStreamMessage(chunk) {
+  const streamMessage = {
+    type: 'stream-audio',
+    payload: {
+      input: Array.from(chunk),
+      config: {
+        stitch: true,
+      },
+      background: {
+        color: '#FFFFFF',
+      },
+      session_id: sessionId,
+      stream_id: streamId,
+      presenter_type: PRESENTER_TYPE,
+    },
+  };
+
+  sendMessage(ws, streamMessage);
 }
