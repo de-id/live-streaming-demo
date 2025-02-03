@@ -176,6 +176,12 @@ destroyButton.onclick = async () => {
   };
   sendMessage(ws, streamMessage);
 
+  // Close WebSocket connection
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+
   stopAllStreams();
   closePC();
 };
@@ -403,7 +409,7 @@ function closePC(pc = peerConnection) {
   pc.removeEventListener('connectionstatechange', onConnectionStateChange, true);
   pc.removeEventListener('signalingstatechange', onSignalingStateChange, true);
   pc.removeEventListener('track', onTrack, true);
-  pc.removeEventListener('message', onStreamEvent, true);
+  pcDataChannel.removeEventListener('message', onStreamEvent, true);
 
   clearInterval(statsIntervalId);
   isStreamReady = !stream_warmup;
