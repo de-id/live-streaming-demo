@@ -1,6 +1,6 @@
 'use strict';
-const fetchJsonFile = await fetch("./api.json")
-const DID_API = await fetchJsonFile.json()
+const fetchJsonFile = await fetch('./api.json');
+const DID_API = await fetchJsonFile.json();
 
 if (DID_API.key == '🤫') alert('Please put your api key inside ./api.json and restart..');
 
@@ -38,11 +38,11 @@ const streamEventLabel = document.getElementById('stream-event-label');
 
 const presenterInputByService = {
   talks: {
-    source_url: 'https://d-id-public-bucket.s3.amazonaws.com/or-roman.jpg',
+    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
   },
   clips: {
-    presenter_id: 'rian-lZC6MmWfC1',
-    driver_id: 'mXra4jY38i',
+    presenter_id: 'v2_public_private_google_oauth2_106958331103259097202@LudBjx9Rd2',
+    driver_id: 'aHNl3DGuAv',
   },
 };
 
@@ -246,7 +246,7 @@ function onTrack(event) {
   statsIntervalId = setInterval(async () => {
     const stats = await peerConnection.getStats(event.track);
     stats.forEach((report) => {
-     if (report.type === 'inbound-rtp' && report.kind === 'video') {
+      if (report.type === 'inbound-rtp' && report.kind === 'video') {
         const videoStatusChanged = videoIsPlaying !== report.bytesReceived > lastBytesReceived;
 
         if (videoStatusChanged) {
