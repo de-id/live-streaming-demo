@@ -387,7 +387,7 @@ function setStreamVideoElement(stream) {
 }
 
 function playIdleVideo() {
-  idleVideoElement.src = DID_API.service == 'clips' ? 'rian_idle.mp4' : 'or_idle.mp4';
+  idleVideoElement.src = DID_API.service == 'clips' ? 'rian_idle.mp4' : 'emma_idle.mp4';
 }
 
 function stopAllStreams() {
