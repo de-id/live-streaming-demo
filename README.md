@@ -27,5 +27,5 @@
 
 - Add websocket url and token to the api.json (option 1) or .env file
 - input streaming audio or text can be done in 2 ways: connect with a webrtc client and create a websocket connection to stream the request (stream-text / stream-audio) or create a websocket connection and
-- send all requests through this connection: init-stream / sdp, etc.
+- send all requests through this connection: init-stream / sdp, etc. For websocket client option use "/input-stream" route.
 - run: yarn dev
