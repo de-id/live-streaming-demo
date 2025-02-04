@@ -23,9 +23,9 @@
 - you can store the created `agentId` and `chatID` variables and at the bottom of the `agents-client-api.js` file for future chats with your newly created Agent.
   ![app](./agents_app.png)
 
-## ⭐ Start Websocket Demo [NEW!] ⭐
+## ⭐ Start Input Streaming Demo [NEW!] ⭐
 
 - Add websocket url and token to the api.json (option 1) or .env file
-- input streaming audio or text can be done in 2 ways: connect with a webrtc client and create a websocket connection to stream the request (stream-text / stream-audio) or create a websocket connection and
-- send all requests through this connection: init-stream / sdp, etc. For websocket client option use "/input-stream" route.
+- Streaming audio or text can be done in 2 ways: connect with a webrtc client and create a websocket connection to stream the request (stream-text / stream-audio) or create a websocket connection and
+- send all requests through this connection: init-stream / sdp, etc. For websocket client option use "/streaming" route.
 - run: yarn dev
