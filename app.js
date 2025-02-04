@@ -6,12 +6,16 @@ const port = 3000;
 
 const app = express();
 app.use(cors({ origin: 'http://localhost:3000' }));
-
 app.use('/', express.static(__dirname));
 
 app.get('/', function (req, res) {
   res.sendFile(__dirname + '/index.html');
 });
+
+app.get('/input-stream', function (req, res) {
+  res.sendFile(__dirname + '/index-ws.html');
+});
+
 app.get('/agents', function (req, res) {
   res.sendFile(__dirname + '/index-agents.html');
 });
