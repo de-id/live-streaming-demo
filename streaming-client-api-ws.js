@@ -132,7 +132,8 @@ streamAudioButton.onclick = async () => {
 
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
-  const text = 'This is an example of the WebSocket streaming API, Making videos is easy with D-ID';
+  const text =
+    'This is an example of the WebSocket streaming API <break time="1.5s" /> Making videos is easy with D-ID';
   const chunks = text.split(' ');
 
   // Indicates end of text stream
@@ -142,10 +143,14 @@ streamWordButton.onclick = async () => {
     const streamMessage = {
       type: 'stream-text',
       payload: {
-        input: chunk,
-        provider: {
-          type: 'elevenlabs',
-          voice_id: '21m00Tcm4TlvDq8ikWAM',
+        script: {
+          type: 'text',
+          input: chunk,
+          provider: {
+            type: 'elevenlabs',
+            voice_id: '21m00Tcm4TlvDq8ikWAM',
+          },
+          ssml: true,
         },
         config: {
           stitch: true,
@@ -486,7 +491,10 @@ function sendStreamMessage(chunk) {
   const streamMessage = {
     type: 'stream-audio',
     payload: {
-      input: Array.from(chunk),
+      script: {
+        type: 'audio',
+        input: Array.from(chunk),
+      },
       config: {
         stitch: true,
       },

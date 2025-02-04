@@ -1,6 +1,6 @@
 {
-  "key": "🤫",
+  "key": "YWxtb2cuZ2FsQGRlaWRlbnRpZmljYXRpb24uY28:LWP_SpazIZPBg7RUDbcHr",
   "url": "https://api.d-id.com",
   "websocketUrl": "wss://ws-api.d-id.com",
-  "service": "talks"
+  "service": "clips"
 }
