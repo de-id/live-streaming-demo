@@ -35,14 +35,14 @@ const iceGatheringStatusLabel = document.getElementById('ice-gathering-status-la
 const signalingStatusLabel = document.getElementById('signaling-status-label');
 const streamingStatusLabel = document.getElementById('streaming-status-label');
 const streamEventLabel = document.getElementById('stream-event-label');
-//  todo : change to prod + api.json
+//  todo : change to new presenters - Alon
 const presenterInputByService = {
   talks: {
     source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
   },
   clips: {
-    presenter_id: 'v2_public_private_google_oauth2_106958331103259097202@LudBjx9Rd2',
-    driver_id: 'aHNl3DGuAv',
+    presenter_id: 'v2_private_google_oauth2_110567519239031021519@T_1ibUgfPF',
+    driver_id: 'mNE1b4S8s2',
   },
 };
 
