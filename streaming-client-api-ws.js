@@ -46,7 +46,11 @@ const presenterInputByService = {
   },
 };
 
+const PRESENTER_TYPE = DID_API.service === 'clips' ? 'clip' : 'talk';
+
 const connectButton = document.getElementById('connect-button');
+let ws;
+
 connectButton.onclick = async () => {
   if (peerConnection && peerConnection.connectionState === 'connected') {
     return;
@@ -55,88 +59,133 @@ connectButton.onclick = async () => {
   stopAllStreams();
   closePC();
 
-  /**
-   * Set 'stream_warmup' to 'true' in the payload to initiate idle streaming at the beginning of the connection, addressing jittering issues.
-   * The idle streaming process is transparent to the user and is concealed by triggering a 'stream/ready' event on the data channel,
-   * indicating that idle streaming has concluded and the stream channel is ready for use.
-   */
-  const sessionResponse = await fetchWithRetries(`${DID_API.url}/${DID_API.service}/streams`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${DID_API.key}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ ...presenterInputByService[DID_API.service], stream_warmup }),
-  });
-
-  const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = await sessionResponse.json();
-  streamId = newStreamId;
-  sessionId = newSessionId;
-
   try {
-    sessionClientAnswer = await createPeerConnection(offer, iceServers);
-  } catch (e) {
-    console.log('error during streaming setup', e);
-    stopAllStreams();
-    closePC();
-    return;
-  }
+    // Step 1: Connect to WebSocket
+    ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.key);
 
-  const sdpResponse = await fetch(`${DID_API.url}/${DID_API.service}/streams/${streamId}/sdp`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${DID_API.key}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      answer: sessionClientAnswer,
-      session_id: sessionId,
-    }),
-  });
+    // Step 2: Send "init-stream" message to WebSocket
+    const startStreamMessage = {
+      type: 'init-stream',
+      payload: {
+        ...presenterInputByService[DID_API.service],
+        presenter_type: PRESENTER_TYPE,
+      },
+    };
+    sendMessage(ws, startStreamMessage);
+
+    // Step 3: Handle WebSocket responses by message type
+    ws.onmessage = async (event) => {
+      const data = JSON.parse(event.data);
+      switch (data.messageType) {
+        case 'init-stream':
+          const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = data;
+          streamId = newStreamId;
+          sessionId = newSessionId;
+
+          try {
+            sessionClientAnswer = await createPeerConnection(offer, iceServers);
+            // Step 4: Send SDP answer to WebSocket
+            const sdpMessage = {
+              type: 'sdp',
+              payload: {
+                answer: sessionClientAnswer,
+                session_id: sessionId,
+                presenter_type: PRESENTER_TYPE,
+              },
+            };
+            sendMessage(ws, sdpMessage);
+          } catch (e) {
+            console.error('Error during streaming setup', e);
+            stopAllStreams();
+            closePC();
+            return;
+          }
+          break;
+
+        case 'sdp':
+          console.log('SDP message received:', event.data);
+          break;
+
+        case 'delete-stream':
+          console.log('Stream deleted:', event.data);
+          break;
+      }
+    };
+  } catch (error) {
+    console.error('Failed to connect and set up stream:', error.type);
+  }
 };
 
-const startButton = document.getElementById('start-button');
-startButton.onclick = async () => {
-  // connectionState not supported in firefox
+const streamAudioButton = document.getElementById('stream-audio-button');
+streamAudioButton.onclick = async () => {
   if (
     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
     isStreamReady
   ) {
-    const playResponse = await fetchWithRetries(`${DID_API.url}/${DID_API.service}/streams/${streamId}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${DID_API.key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    try {
+      await streamAudioInChunks('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3');
+    } catch (error) {
+      console.error('Error streaming audio:', error);
+    }
+  }
+};
+
+const streamWordButton = document.getElementById('stream-word-button');
+streamWordButton.onclick = async () => {
+  const text =
+    'This is an example of the WebSocket streaming API <break time="1.5s" /> Making videos is easy with D-ID';
+  const chunks = text.split(' ');
+
+  // Indicates end of text stream
+  chunks.push('');
+
+  for (const [_, chunk] of chunks.entries()) {
+    const streamMessage = {
+      type: 'stream-text',
+      payload: {
         script: {
-          type: 'audio',
-          audio_url: 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
-        },
-        ...(DID_API.service === 'clips' && {
-          background: {
-            color: '#FFFFFF',
+          type: 'text',
+          input: chunk,
+          provider: {
+            type: 'microsoft',
+            voice_id: 'en-US-JennyNeural ',
           },
-        }),
+          ssml: true,
+        },
         config: {
           stitch: true,
         },
+        apiKeysExternal: {
+          elevenlabs: { key: '' },
+        },
+        background: {
+          color: '#FFFFFF',
+        },
         session_id: sessionId,
-      }),
-    });
+        stream_id: streamId,
+        presenter_type: PRESENTER_TYPE,
+      },
+    };
+    sendMessage(ws, streamMessage);
   }
 };
 
 const destroyButton = document.getElementById('destroy-button');
 destroyButton.onclick = async () => {
-  await fetch(`${DID_API.url}/${DID_API.service}/streams/${streamId}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Basic ${DID_API.key}`,
-      'Content-Type': 'application/json',
+  const streamMessage = {
+    type: 'delete-stream',
+    payload: {
+      session_id: sessionId,
+      stream_id: streamId,
     },
-    body: JSON.stringify({ session_id: sessionId }),
-  });
+  };
+  sendMessage(ws, streamMessage);
+
+  // Close WebSocket connection
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
 
   stopAllStreams();
   closePC();
@@ -146,35 +195,28 @@ function onIceGatheringStateChange() {
   iceGatheringStatusLabel.innerText = peerConnection.iceGatheringState;
   iceGatheringStatusLabel.className = 'iceGatheringState-' + peerConnection.iceGatheringState;
 }
+
 function onIceCandidate(event) {
   console.log('onIceCandidate', event);
   if (event.candidate) {
     const { candidate, sdpMid, sdpMLineIndex } = event.candidate;
-
-    fetch(`${DID_API.url}/${DID_API.service}/streams/${streamId}/ice`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${DID_API.key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    sendMessage(ws, {
+      type: 'ice',
+      payload: {
+        session_id: sessionId,
         candidate,
         sdpMid,
         sdpMLineIndex,
-        session_id: sessionId,
-      }),
+      },
     });
   } else {
-    // For the initial 2 sec idle stream at the beginning of the connection, we utilize a null ice candidate.
-    fetch(`${DID_API.url}/${DID_API.service}/streams/${streamId}/ice`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${DID_API.key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    sendMessage(ws, {
+      type: 'ice',
+      payload: {
+        stream_id: streamId,
         session_id: sessionId,
-      }),
+        presenter_type: PRESENTER_TYPE,
+      },
     });
   }
 }
@@ -190,6 +232,8 @@ function onConnectionStateChange() {
   // not supported in firefox
   peerStatusLabel.innerText = peerConnection.connectionState;
   peerStatusLabel.className = 'peerConnectionState-' + peerConnection.connectionState;
+  console.log('peerConnection', peerConnection.connectionState);
+
   if (peerConnection.connectionState === 'connected') {
     playIdleVideo();
     /**
@@ -342,8 +386,8 @@ function setStreamVideoElement(stream) {
   if (streamVideoElement.paused) {
     streamVideoElement
       .play()
-      .then((_) => { })
-      .catch((e) => { });
+      .then((_) => {})
+      .catch((e) => {});
   }
 }
 
@@ -370,7 +414,7 @@ function closePC(pc = peerConnection) {
   pc.removeEventListener('connectionstatechange', onConnectionStateChange, true);
   pc.removeEventListener('signalingstatechange', onSignalingStateChange, true);
   pc.removeEventListener('track', onTrack, true);
-  pc.removeEventListener('onmessage', onStreamEvent, true);
+  pcDataChannel.removeEventListener('message', onStreamEvent, true);
 
   clearInterval(statsIntervalId);
   isStreamReady = !stream_warmup;
@@ -389,19 +433,79 @@ function closePC(pc = peerConnection) {
 const maxRetryCount = 3;
 const maxDelaySec = 4;
 
-async function fetchWithRetries(url, options, retries = 1) {
-  try {
-    return await fetch(url, options);
-  } catch (err) {
-    if (retries <= maxRetryCount) {
-      const delay = Math.min(Math.pow(2, retries) / 4 + Math.random(), maxDelaySec) * 1000;
+async function connectToWebSocket(url, token) {
+  return new Promise((resolve, reject) => {
+    const wsUrl = `${url}?authorization=Basic ${encodeURIComponent(token)}`;
+    const ws = new WebSocket(wsUrl);
 
-      await new Promise((resolve) => setTimeout(resolve, delay));
+    ws.onopen = () => {
+      console.log('WebSocket connection opened.');
+      resolve(ws);
+    };
 
-      console.log(`Request failed, retrying ${retries}/${maxRetryCount}. Error ${err}`);
-      return fetchWithRetries(url, options, retries + 1);
-    } else {
-      throw new Error(`Max retries exceeded. error: ${err}`);
-    }
+    ws.onerror = (err) => {
+      console.error('WebSocket error:', err);
+      reject(err);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket connection closed.');
+    };
+  });
+}
+
+function sendMessage(ws, message) {
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(message));
+  } else {
+    console.error('WebSocket is not open. Cannot send message.');
   }
+}
+
+async function streamAudioInChunks(audioUrl, chunkSize = 1024 * 3) {
+  const response = await fetch(audioUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch audio file: ${response.statusText}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
+
+  for (let chunkIndex = 0; chunkIndex < totalChunks + 1; chunkIndex++) {
+    const chunk = getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize);
+    sendStreamMessage(chunk);
+  }
+}
+
+function getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize) {
+  if (chunkIndex === totalChunks) {
+    return new Uint8Array(0); // Indicates end of audio stream
+  }
+
+  const start = chunkIndex * chunkSize;
+  const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
+  return new Uint8Array(arrayBuffer.slice(start, end));
+}
+
+function sendStreamMessage(chunk) {
+  const streamMessage = {
+    type: 'stream-audio',
+    payload: {
+      script: {
+        type: 'audio',
+        input: Array.from(chunk),
+      },
+      config: {
+        stitch: true,
+      },
+      background: {
+        color: '#FFFFFF',
+      },
+      session_id: sessionId,
+      stream_id: streamId,
+      presenter_type: PRESENTER_TYPE,
+    },
+  };
+
+  sendMessage(ws, streamMessage);
 }
