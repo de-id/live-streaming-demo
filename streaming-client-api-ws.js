@@ -35,14 +35,14 @@ const iceGatheringStatusLabel = document.getElementById('ice-gathering-status-la
 const signalingStatusLabel = document.getElementById('signaling-status-label');
 const streamingStatusLabel = document.getElementById('streaming-status-label');
 const streamEventLabel = document.getElementById('stream-event-label');
-//  todo : change to new presenters - Alon
+
 const presenterInputByService = {
   talks: {
-    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
+    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg',
   },
   clips: {
-    presenter_id: 'v2_private_google_oauth2_110567519239031021519@T_1ibUgfPF',
-    driver_id: 'mNE1b4S8s2',
+    presenter_id: 'v2_public_alex@qcvo4gupoy',
+    driver_id: 'e3nbserss8',
   },
 };
 
@@ -387,7 +387,7 @@ function setStreamVideoElement(stream) {
 }
 
 function playIdleVideo() {
-  idleVideoElement.src = DID_API.service == 'clips' ? 'rian_idle.mp4' : 'emma_idle.mp4';
+  idleVideoElement.src = DID_API.service == 'clips' ? 'alex_v2_idle.mp4' : 'emma_idle.mp4';
 }
 
 function stopAllStreams() {
