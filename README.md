@@ -13,7 +13,15 @@
 - (stream) Press the start button to start streaming
   <img src="./app.png" alt="Streaming App" width="200"/>
 
-## ⭐ Start Agents Demo [NEW!] ⭐
+## ⭐ Start Input Streaming Demo [NEW!] ⭐
+
+- Add websocket url and token to the api.json (option 1) or .env file
+- Fast start: send all requests through websocket connection: init-stream / sdp, etc, use "/ws-streaming" route.
+- Streaming audio or text can be done in 2 ways: connect with a webrtc client and create a websocket connection to stream
+- the request (stream-text / stream-audio) or create a websocket connection.
+- run: node app.js
+
+## Start Agents Demo
 
 - (bring up the app) in the folder (ctr left click on folder through finder) open the terminal `run node app.js`
 - you should see this message - server started on port localhost:3000
@@ -22,10 +30,3 @@
 - press 'Connect' to connect to the agent, once done, type a message and press 'Send' to start a chat
 - you can store the created `agentId` and `chatID` variables and at the bottom of the `agents-client-api.js` file for future chats with your newly created Agent.
   ![app](./agents_app.png)
-
-## ⭐ Start Input Streaming Demo [NEW!] ⭐
-
-- Add websocket url and token to the api.json (option 1) or .env file
-- Streaming audio or text can be done in 2 ways: connect with a webrtc client and create a websocket connection to stream the request (stream-text / stream-audio) or create a websocket connection and
-- send all requests through this connection: init-stream / sdp, etc. For websocket client option use "/streaming" route.
-- run: yarn dev

@@ -123,7 +123,7 @@ streamAudioButton.onclick = async () => {
     isStreamReady
   ) {
     try {
-      await streamAudioInChunks('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/AgentsTeam/tts_generated.mp3');
+      await streamAudioInChunks('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3');
     } catch (error) {
       console.error('Error streaming audio:', error);
     }
@@ -147,8 +147,8 @@ streamWordButton.onclick = async () => {
           type: 'text',
           input: chunk,
           provider: {
-            type: 'elevenlabs',
-            voice_id: '21m00Tcm4TlvDq8ikWAM',
+            type: 'microsoft',
+            voice_id: 'en-US-JennyNeural ',
           },
           ssml: true,
         },

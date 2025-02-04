@@ -12,7 +12,7 @@ app.get('/', function (req, res) {
   res.sendFile(__dirname + '/index.html');
 });
 
-app.get('/streaming', function (req, res) {
+app.get('/ws-streaming', function (req, res) {
   res.sendFile(__dirname + '/index-ws.html');
 });
 
@@ -24,6 +24,6 @@ const server = http.createServer(app);
 
 server.listen(port, () =>
   console.log(
-    `Server started on port localhost:${port}\nhttp://localhost:${port}\nhttp://localhost:${port}/agents\nhttp://localhost:${port}/streaming`
+    `Server started on port localhost:${port}\nhttp://localhost:${port}\nhttp://localhost:${port}/agents\nhttp://localhost:${port}/ws-streaming`
   )
 );
