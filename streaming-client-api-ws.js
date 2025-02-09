@@ -38,11 +38,11 @@ const streamEventLabel = document.getElementById('stream-event-label');
 
 const presenterInputByService = {
   talks: {
-    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg',
+    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
   },
   clips: {
-    presenter_id: 'v2_public_alex@qcvo4gupoy',
-    driver_id: 'e3nbserss8',
+    presenter_id: 'v2_public_private_google_oauth2_106958331103259097202@LudBjx9Rd2',
+    driver_id: 'aHNl3DGuAv',
   },
 };
 
@@ -116,6 +116,20 @@ connectButton.onclick = async () => {
   }
 };
 
+// const streamAudioButton = document.getElementById('stream-audio-button');
+// streamAudioButton.onclick = async () => {
+//   if (
+//     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
+//     isStreamReady
+//   ) {
+//     try {
+//       await streamAudioInChunks('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/lorem_ipsum_matthew_male_1.wav');
+//     } catch (error) {
+//       console.error('Error streaming audio:', error);
+//     }
+//   }
+// };
+
 const streamAudioButton = document.getElementById('stream-audio-button');
 streamAudioButton.onclick = async () => {
   if (
@@ -123,12 +137,36 @@ streamAudioButton.onclick = async () => {
     isStreamReady
   ) {
     try {
-      await streamAudioInChunks('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3');
+      const pcmData = await loadPCMData();
+      sendChunkedPCMData(ws, pcmData);
     } catch (error) {
       console.error('Error streaming audio:', error);
     }
   }
 };
+
+function sendChunkedPCMData(ws, pcmData, chunkSize = 3 * 1024) {
+  pcmData.forEach((event, count) => {
+    if (event.type === 'response.audio.delta') {
+      console.log(`Send sub chunk, N.${count}`);
+      sendSubChunks(ws, event.delta, chunkSize);
+    } else if (event.type === 'response.audio.done') {
+      console.log('Send last chunk');
+      sendMessage(ws, {
+        type: 'stream-audio',
+        payload: {
+          input: Array.from(new Uint8Array(0)),
+          config: {
+            stitch: true,
+          },
+          session_id: sessionId,
+          stream_id: streamId,
+          presenter_type: PRESENTER_TYPE,
+        },
+      });
+    }
+  });
+}
 
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
@@ -479,12 +517,12 @@ async function streamAudioInChunks(audioUrl, chunkSize = 1024 * 3) {
 
 function getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize) {
   if (chunkIndex === totalChunks) {
-    return new Uint8Array(0); // Indicates end of audio stream
+    return new Int16Array(0); // Indicates end of audio stream
   }
 
   const start = chunkIndex * chunkSize;
   const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
-  return new Uint8Array(arrayBuffer.slice(start, end));
+  return new Int16Array(arrayBuffer.slice(start, end));
 }
 
 function sendStreamMessage(chunk) {
