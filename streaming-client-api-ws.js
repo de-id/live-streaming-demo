@@ -129,7 +129,7 @@ function base64ToArrayBuffer(base64) {
   return bytes.buffer;
 }
 
-async function sendSubChunks(ws, delta, chunkSize = 1024 * 3) {
+async function sendSubChunks(ws, delta, chunkSize = 18 * 1024) {
   const arrayBuffer = base64ToArrayBuffer(delta);
   const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
   console.log(`Sub chunk size: ${arrayBuffer.byteLength} bytes, Total chunks: ${totalChunks}`);
@@ -174,11 +174,11 @@ streamAudioButton.onclick = async () => {
   }
 };
 
-function sendChunkedPCMData(ws, pcmData, chunkSize = 3 * 1024) {
-  pcmData.forEach((event, count) => {
+function sendChunkedPCMData(ws, pcmData) {
+  for (const [count, event] of pcmData.entries()) {
     if (event.type === 'response.audio.delta') {
       console.log(`Send sub chunk, N.${count}`);
-      sendSubChunks(ws, event.delta, chunkSize);
+      sendSubChunks(ws, event.delta);
     } else if (event.type === 'response.audio.done') {
       console.log('Send last chunk');
       sendMessage(ws, {
@@ -194,7 +194,7 @@ function sendChunkedPCMData(ws, pcmData, chunkSize = 3 * 1024) {
         },
       });
     }
-  });
+  }
 }
 
 const streamWordButton = document.getElementById('stream-word-button');
