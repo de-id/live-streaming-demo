@@ -529,26 +529,3 @@ function sendMessage(ws, message) {
     console.error('WebSocket is not open. Cannot send message.');
   }
 }
-
-function sendStreamMessage(chunk) {
-  const streamMessage = {
-    type: 'stream-audio',
-    payload: {
-      script: {
-        type: 'audio',
-        input: Array.from(chunk),
-      },
-      config: {
-        stitch: true,
-      },
-      background: {
-        color: '#FFFFFF',
-      },
-      session_id: sessionId,
-      stream_id: streamId,
-      presenter_type: PRESENTER_TYPE,
-    },
-  };
-
-  sendMessage(ws, streamMessage);
-}
