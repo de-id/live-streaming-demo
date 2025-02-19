@@ -1,4 +1,7 @@
 'use strict';
+
+import { pcmChunks } from './data/pcm-chunks.js';
+
 const fetchJsonFile = await fetch('./api.json');
 const DID_API = await fetchJsonFile.json();
 
@@ -38,11 +41,11 @@ const streamEventLabel = document.getElementById('stream-event-label');
 
 const presenterInputByService = {
   talks: {
-    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg',
+    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
   },
   clips: {
-    presenter_id: 'v2_public_alex@qcvo4gupoy',
-    driver_id: 'e3nbserss8',
+    presenter_id: 'v2_public_private_google_oauth2_106958331103259097202@LudBjx9Rd2',
+    driver_id: 'aHNl3DGuAv',
   },
 };
 
@@ -116,6 +119,48 @@ connectButton.onclick = async () => {
   }
 };
 
+function base64ToArrayBuffer(base64) {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Int16Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+// Note : chunk size is dependant on the network speed, try 10KB / 15KB and increase if needed
+async function sendSubChunks(ws, delta, chunkSize = 10 * 1024) {
+  const arrayBuffer = base64ToArrayBuffer(delta);
+  const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
+  console.log(`Sub chunk size: ${arrayBuffer.byteLength} bytes, Total chunks: ${totalChunks}`);
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
+    const chunk = new Int16Array(arrayBuffer.slice(start, end));
+    const input = Array.from(chunk);
+    console.log(`Streaming chunk ${i + 1}/${totalChunks}, size: ${chunk.length} bytes`);
+
+    if (input.length === 0) {
+      console.log('ERROR: input is empty in the middle of the stream');
+      return;
+    } else {
+      sendMessage(ws, {
+        type: 'stream-audio',
+        payload: {
+          script: {
+            type: 'audio',
+            input,
+          },
+          session_id: sessionId,
+          stream_id: streamId,
+          presenter_type: PRESENTER_TYPE,
+        },
+      });
+    }
+  }
+}
+
 const streamAudioButton = document.getElementById('stream-audio-button');
 streamAudioButton.onclick = async () => {
   if (
@@ -123,12 +168,35 @@ streamAudioButton.onclick = async () => {
     isStreamReady
   ) {
     try {
-      await streamAudioInChunks('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3');
+      sendChunkedPCMData(ws, pcmChunks);
     } catch (error) {
       console.error('Error streaming audio:', error);
     }
   }
 };
+
+function sendChunkedPCMData(ws, pcmData) {
+  for (const [count, event] of pcmData.entries()) {
+    if (event.type === 'response.audio.delta') {
+      console.log(`Send sub chunk, N.${count}`);
+      sendSubChunks(ws, event.delta);
+    } else if (event.type === 'response.audio.done') {
+      console.log('Send last chunk');
+      sendMessage(ws, {
+        type: 'stream-audio',
+        payload: {
+          script: {
+            type: 'audio',
+            input: Array.from(new Int16Array(0)),
+          },
+          session_id: sessionId,
+          stream_id: streamId,
+          presenter_type: PRESENTER_TYPE,
+        },
+      });
+    }
+  }
+}
 
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
@@ -250,6 +318,7 @@ function onConnectionStateChange() {
     }, 5000);
   }
 }
+
 function onSignalingStateChange() {
   signalingStatusLabel.innerText = peerConnection.signalingState;
   signalingStatusLabel.className = 'signalingState-' + peerConnection.signalingState;
@@ -460,52 +529,4 @@ function sendMessage(ws, message) {
   } else {
     console.error('WebSocket is not open. Cannot send message.');
   }
-}
-
-async function streamAudioInChunks(audioUrl, chunkSize = 1024 * 3) {
-  const response = await fetch(audioUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch audio file: ${response.statusText}`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
-  const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
-
-  for (let chunkIndex = 0; chunkIndex < totalChunks + 1; chunkIndex++) {
-    const chunk = getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize);
-    sendStreamMessage(chunk);
-  }
-}
-
-function getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize) {
-  if (chunkIndex === totalChunks) {
-    return new Uint8Array(0); // Indicates end of audio stream
-  }
-
-  const start = chunkIndex * chunkSize;
-  const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
-  return new Uint8Array(arrayBuffer.slice(start, end));
-}
-
-function sendStreamMessage(chunk) {
-  const streamMessage = {
-    type: 'stream-audio',
-    payload: {
-      script: {
-        type: 'audio',
-        input: Array.from(chunk),
-      },
-      config: {
-        stitch: true,
-      },
-      background: {
-        color: '#FFFFFF',
-      },
-      session_id: sessionId,
-      stream_id: streamId,
-      presenter_type: PRESENTER_TYPE,
-    },
-  };
-
-  sendMessage(ws, streamMessage);
 }

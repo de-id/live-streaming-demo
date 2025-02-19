@@ -38,11 +38,11 @@ const streamEventLabel = document.getElementById('stream-event-label');
 
 const presenterInputByService = {
   talks: {
-    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg',
+    source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Brandon_m/thumbnail.jpeg',
   },
   clips: {
-    presenter_id: 'v2_public_alex@qcvo4gupoy',
-    driver_id: 'e3nbserss8',
+    presenter_id: 'v2_public_private_google_oauth2_106958331103259097202@LudBjx9Rd2',
+    driver_id: 'aHNl3DGuAv',
   },
 };
 
@@ -342,8 +342,8 @@ function setStreamVideoElement(stream) {
   if (streamVideoElement.paused) {
     streamVideoElement
       .play()
-      .then((_) => { })
-      .catch((e) => { });
+      .then((_) => {})
+      .catch((e) => {});
   }
 }
 

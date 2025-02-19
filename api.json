@@ -1,6 +1,6 @@
 {
-  "key": "🤫",
-  "url": "https://api.d-id.com",
-  "websocketUrl": "wss://ws-api.d-id.com",
-  "service": "talks"
+  "key": "XXXX",
+  "url": "https://api-dev.d-id.com",
+  "websocketUrl": "wss://ws-api-dev.d-id.com",
+  "service": "clips"
 }
