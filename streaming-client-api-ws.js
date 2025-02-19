@@ -129,7 +129,8 @@ function base64ToArrayBuffer(base64) {
   return bytes.buffer;
 }
 
-async function sendSubChunks(ws, delta, chunkSize = 18 * 1024) {
+// Note : chunk size is dependant on the network speed, try 10KB / 15KB and increase if needed
+async function sendSubChunks(ws, delta, chunkSize = 10 * 1024) {
   const arrayBuffer = base64ToArrayBuffer(delta);
   const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
   console.log(`Sub chunk size: ${arrayBuffer.byteLength} bytes, Total chunks: ${totalChunks}`);
