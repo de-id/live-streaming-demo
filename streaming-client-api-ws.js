@@ -155,6 +155,59 @@ streamWordButton.onclick = async () => {
   }
 };
 
+const streamAudioButton = document.getElementById('stream-audio-button');
+streamAudioButton.onclick = async () => {
+  const elevenKey = '4d864411748dce926f3de3ca46a7d934';
+  async function stream(text, voiceId = '21m00Tcm4TlvDq8ikWAM') {
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=pcm_16000`,
+      {
+        method: 'POST',
+        headers: { 'xi-api-key': elevenKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2' }),
+      }
+    );
+
+    return response.body;
+  }
+  const streamText = 'This is an example of the WebSocket streaming API Making videos is easy with D-ID';
+  const activeStream = await stream(streamText);
+  let i = 0;
+  for await (const chunk of activeStream) {
+    sendStreamMessage([...chunk], i);
+    i++;
+    // fetch(`${baseUrl}/${baseRoute()}/${sessionId}/input`, {
+    //   method: 'POST',
+    //   credentials: 'include',
+    //   headers: { user: user, 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({
+    //     timestamp: i,
+    //     index: i++,
+    //     clipData: {
+    //       clip_id: clipId,
+    //       script: { data: { type: 'audio', input: [...chunk] }, provider },
+    //     },
+    //   }),
+    // });
+  }
+
+  sendStreamMessage(Array.from(new Int16Array(0)), i);
+
+  // fetch(`${baseUrl}/${baseRoute()}/${sessionId}/input`, {
+  //   method: 'POST',
+  //   credentials: 'include',
+  //   headers: { user: user, 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({
+  //     timestamp: i,
+  //     index: i++,
+  //     clipData: {
+  //       clip_id: clipId,
+  //       script: { data: { type: 'audio', input: Array.from(new Uint8Array(0)) }, provider },
+  //     },
+  //   }),
+  // });
+};
+
 const destroyButton = document.getElementById('destroy-button');
 destroyButton.onclick = async () => {
   const streamMessage = {
@@ -447,21 +500,6 @@ function sendMessage(ws, message) {
   }
 }
 
-async function streamAudioInChunks(audioUrl, chunkSize = 1024 * 3) {
-  const response = await fetch(audioUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch audio file: ${response.statusText}`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
-  const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
-
-  for (let chunkIndex = 0; chunkIndex < totalChunks + 1; chunkIndex++) {
-    const chunk = getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize);
-    sendStreamMessage(chunk);
-  }
-}
-
 function getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize) {
   if (chunkIndex === totalChunks) {
     return new Uint8Array(0); // Indicates end of audio stream
@@ -472,13 +510,13 @@ function getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize) {
   return new Uint8Array(arrayBuffer.slice(start, end));
 }
 
-function sendStreamMessage(chunk) {
+function sendStreamMessage(input, index) {
   const streamMessage = {
     type: 'stream-audio',
     payload: {
       script: {
         type: 'audio',
-        input: Array.from(chunk),
+        input,
       },
       config: {
         stitch: true,
@@ -486,6 +524,7 @@ function sendStreamMessage(chunk) {
       background: {
         color: '#FFFFFF',
       },
+      index,
       session_id: sessionId,
       stream_id: streamId,
       presenter_type: PRESENTER_TYPE,
