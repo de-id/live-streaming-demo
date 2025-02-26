@@ -116,24 +116,9 @@ connectButton.onclick = async () => {
   }
 };
 
-const streamAudioButton = document.getElementById('stream-audio-button');
-streamAudioButton.onclick = async () => {
-  if (
-    (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
-    isStreamReady
-  ) {
-    try {
-      await streamAudioInChunks('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3');
-    } catch (error) {
-      console.error('Error streaming audio:', error);
-    }
-  }
-};
-
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
-  const text =
-    'This is an example of the WebSocket streaming API <break time="1.5s" /> Making videos is easy with D-ID';
+  const text = 'This is an example of the WebSocket streaming API Making videos is easy with D-ID';
   const chunks = text.split(' ');
 
   // Indicates end of text stream
