@@ -116,18 +116,68 @@ connectButton.onclick = async () => {
   }
 };
 
-const streamAudioButton = document.getElementById('stream-audio-button');
-streamAudioButton.onclick = async () => {
-  if (
-    (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
-    isStreamReady
-  ) {
-    try {
-      await streamAudioInChunks('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3');
-    } catch (error) {
-      console.error('Error streaming audio:', error);
-    }
+// const streamAudioButton = document.getElementById('stream-audio-button');
+// streamAudioButton.onclick = async () => {
+//   if (
+//     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
+//     isStreamReady
+//   ) {
+//     try {
+//       await streamAudioInChunks('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3');
+//     } catch (error) {
+//       console.error('Error streaming audio:', error);
+//     }
+//   }
+// };
+
+const streamAudio = document.getElementById('stream-audio');
+streamAudio.onclick = async () => {
+  const elevenKey = '4d864411748dce926f3de3ca46a7d934';
+  async function stream(text, voiceId = '21m00Tcm4TlvDq8ikWAM') {
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=pcm_16000`,
+      {
+        method: 'POST',
+        headers: { 'xi-api-key': elevenKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2' }),
+      }
+    );
+
+    return response.body;
   }
+
+  const activeStream = await stream(streamText);
+  for await (const chunk of activeStream) {
+    sendStreamMessage([...chunk]);
+    // fetch(`${baseUrl}/${baseRoute()}/${sessionId}/input`, {
+    //   method: 'POST',
+    //   credentials: 'include',
+    //   headers: { user: user, 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({
+    //     timestamp: i,
+    //     index: i++,
+    //     clipData: {
+    //       clip_id: clipId,
+    //       script: { data: { type: 'audio', input: [...chunk] }, provider },
+    //     },
+    //   }),
+    // });
+  }
+
+  sendStreamMessage(Array.from(new Uint8Array(0)));
+  // fetch(`${baseUrl}/${baseRoute()}/${sessionId}/input`, {
+  //   method: 'POST',
+  //   credentials: 'include',
+  //   headers: { user: user, 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({
+  //     timestamp: i,
+  //     index: i++,
+  //     clipData: {
+  //       clip_id: clipId,
+  //       script: { data: { type: 'audio', input: Array.from(new Uint8Array(0)) }, provider },
+  //     },
+  //   }),
+  // });
 };
 
 const streamWordButton = document.getElementById('stream-word-button');
@@ -487,13 +537,13 @@ function getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize) {
   return new Uint8Array(arrayBuffer.slice(start, end));
 }
 
-function sendStreamMessage(chunk) {
+function sendStreamMessage(input) {
   const streamMessage = {
     type: 'stream-audio',
     payload: {
       script: {
         type: 'audio',
-        input: Array.from(chunk),
+        input,
       },
       config: {
         stitch: true,
