@@ -81,7 +81,7 @@ connectButton.onclick = async () => {
           const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = data;
           streamId = newStreamId;
           sessionId = newSessionId;
-
+          console.log('init-stream', newStreamId, newSessionId);
           try {
             sessionClientAnswer = await createPeerConnection(offer, iceServers);
             // Step 4: Send SDP answer to WebSocket
@@ -170,12 +170,17 @@ streamAudioButton.onclick = async () => {
 
     return response.body;
   }
-  const streamText = 'This is an example of the WebSocket streaming API Making videos is easy with D-ID';
+
+  // const streamText = 'This is an example of the WebSocket streaming API Making videos is easy with D-ID';
+  const streamText = `Additional Considerations:
+Voice Selection: To retrieve available voices and their corresponding IDs, refer to the ElevenLabs API documentation.
+By following these steps, you can stream TTS audio from ElevenLabs in a Node.js environment using TypeScript and axios.
+This approach provides a straightforward method to handle real-time audio data in your applications.`;
   const activeStream = await stream(streamText);
   let i = 0;
   for await (const chunk of activeStream) {
-    sendStreamMessage([...chunk], i);
-    i++;
+    console.log('chunk', i);
+    sendStreamMessage([...chunk], i++);
     // fetch(`${baseUrl}/${baseRoute()}/${sessionId}/input`, {
     //   method: 'POST',
     //   credentials: 'include',
@@ -190,9 +195,9 @@ streamAudioButton.onclick = async () => {
     //   }),
     // });
   }
-
-  sendStreamMessage(Array.from(new Int16Array(0)), i);
-
+  // i++;
+  sendStreamMessage(Array.from(new Uint8Array(0)), i++);
+  console.log('done', i);
   // fetch(`${baseUrl}/${baseRoute()}/${sessionId}/input`, {
   //   method: 'POST',
   //   credentials: 'include',
