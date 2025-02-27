@@ -130,7 +130,7 @@ streamWordButton.onclick = async () => {
       payload: {
         script: {
           type: 'text',
-          input: chunk,
+          input: chunk + ' ',
           provider: {
             type: 'microsoft',
             voice_id: 'en-US-JennyNeural ',
@@ -155,6 +155,22 @@ streamWordButton.onclick = async () => {
   }
 };
 
+function splitArrayIntoChunks(array, size) {
+  if (!Array.isArray(array)) {
+    throw new TypeError('Input should be an array');
+  }
+  if (typeof size !== 'number' || size <= 0) {
+    throw new TypeError('Size should be a positive number');
+  }
+
+  const result = [];
+  for (let i = 0; i < array.length; i += size) {
+    const chunk = array.slice(i, i + size);
+    result.push(chunk);
+  }
+  return result;
+}
+
 const streamAudioButton = document.getElementById('stream-audio-button');
 streamAudioButton.onclick = async () => {
   const elevenKey = '4d864411748dce926f3de3ca46a7d934';
@@ -173,14 +189,16 @@ streamAudioButton.onclick = async () => {
 
   // const streamText = 'This is an example of the WebSocket streaming API Making videos is easy with D-ID';
   const streamText = `Additional Considerations:
-Voice Selection: To retrieve available voices and their corresponding IDs, refer to the ElevenLabs API documentation.
-By following these steps, you can stream TTS audio from ElevenLabs in a Node.js environment using TypeScript and axios.
-This approach provides a straightforward method to handle real-time audio data in your applications.`;
+Voice Selection: To retrieve available voices and their corresponding IDs, refer to the ElevenLabs API documentation.`;
+
   const activeStream = await stream(streamText);
   let i = 0;
   for await (const chunk of activeStream) {
-    console.log('chunk', i);
-    sendStreamMessage([...chunk], i++);
+    const splitted = splitArrayIntoChunks([...chunk], 1000);
+    for (const [_, chunk] of splitted.entries()) {
+      console.log('chunk', i);
+      sendStreamMessage([...chunk], i++);
+    }
     // fetch(`${baseUrl}/${baseRoute()}/${sessionId}/input`, {
     //   method: 'POST',
     //   credentials: 'include',
