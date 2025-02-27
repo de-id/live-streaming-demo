@@ -118,13 +118,17 @@ connectButton.onclick = async () => {
 
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
-  const text = 'This is an example of the WebSocket streaming API Making videos is easy with D-ID';
-  const chunks = text.split(' ');
+  const text = 'This is an example of the WebSocket streaming API';
+  const text2 = ' Making videos is easy with D-ID';
+
+  let chunks = text.split(' ');
+  chunks.push(' <break time="3s" /> ');
+  chunks.push(...text2.split(' '));
 
   // Indicates end of text stream
   chunks.push('');
 
-  for (const [_, chunk] of chunks.entries()) {
+  for (const [index, chunk] of chunks.entries()) {
     const streamMessage = {
       type: 'stream-text',
       payload: {
@@ -146,6 +150,7 @@ streamWordButton.onclick = async () => {
         background: {
           color: '#FFFFFF',
         },
+        index,
         session_id: sessionId,
         stream_id: streamId,
         presenter_type: PRESENTER_TYPE,
