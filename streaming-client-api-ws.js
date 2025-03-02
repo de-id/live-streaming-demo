@@ -119,10 +119,10 @@ connectButton.onclick = async () => {
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
   const text = 'This is an example of the WebSocket streaming API';
-  const text2 = ' Making videos is easy with D-ID';
+  const text2 = 'Making videos is easy with D-ID';
 
   let chunks = text.split(' ');
-  chunks.push(' <break time="3s" /> ');
+  chunks.push('<break time="3s" />');
   chunks.push(...text2.split(' '));
 
   // Indicates end of text stream
@@ -201,39 +201,10 @@ Voice Selection: To retrieve available voices and their corresponding IDs, refer
   for await (const chunk of activeStream) {
     const splitted = splitArrayIntoChunks([...chunk], 1000);
     for (const [_, chunk] of splitted.entries()) {
-      console.log('chunk', i);
       sendStreamMessage([...chunk], i++);
     }
-    // fetch(`${baseUrl}/${baseRoute()}/${sessionId}/input`, {
-    //   method: 'POST',
-    //   credentials: 'include',
-    //   headers: { user: user, 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     timestamp: i,
-    //     index: i++,
-    //     clipData: {
-    //       clip_id: clipId,
-    //       script: { data: { type: 'audio', input: [...chunk] }, provider },
-    //     },
-    //   }),
-    // });
   }
-  // i++;
-  sendStreamMessage(Array.from(new Uint8Array(0)), i++);
-  console.log('done', i);
-  // fetch(`${baseUrl}/${baseRoute()}/${sessionId}/input`, {
-  //   method: 'POST',
-  //   credentials: 'include',
-  //   headers: { user: user, 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({
-  //     timestamp: i,
-  //     index: i++,
-  //     clipData: {
-  //       clip_id: clipId,
-  //       script: { data: { type: 'audio', input: Array.from(new Uint8Array(0)) }, provider },
-  //     },
-  //   }),
-  // });
+  sendStreamMessage(Array.from(new Uint8Array(0)), i);
 };
 
 const destroyButton = document.getElementById('destroy-button');
