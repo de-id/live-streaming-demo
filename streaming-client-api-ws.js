@@ -200,8 +200,14 @@ streamWordButton.onclick = async () => {
 
 const streamAudioButton = document.getElementById('stream-audio-button');
 streamAudioButton.onclick = async () => {
-  // todo : remove elevenlabs use, only say we stream pcm chunks
-  const elevenKey = '';
+  // Note : we use elevenlabs to stream pcm chunks, you can use any other provider
+  const elevenKey = DID_API.elevenlabsKey;
+  if (!elevenKey) {
+    const errorMessage = 'Please put your elevenlabs key inside ./api.json and restart..';
+    alert(errorMessage);
+    console.error(errorMessage);
+    return;
+  }
   async function stream(text, voiceId = '21m00Tcm4TlvDq8ikWAM') {
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=pcm_16000`,
