@@ -150,35 +150,58 @@ streamWordButton.onclick = async () => {
         background: {
           color: '#FFFFFF',
         },
-        index,
+        index, // Note : add index to track the order of the chunks (better performance)
         session_id: sessionId,
         stream_id: streamId,
         presenter_type: PRESENTER_TYPE,
       },
     };
+    // v1
+    // const streamMessage = {
+    //   type: 'stream-text',
+    //   payload: {
+    //     input: chunk,
+    //     provider: {
+    //       type: 'microsoft',
+    //       voice_id: 'en-US-JennyNeural ',
+    //     },
+    //     //   provider: {
+    //     //     type: 'elevenlabs',
+    //     //     voice_id: '21m00Tcm4TlvDq8ikWAM',
+    //     //   },
+    //     config: {
+    //       stitch: true,
+    //     },
+    //     // provider: {
+    //     //   type: 'microsoft',
+    //     //   voice_id: 'en-AU-WilliamNeural',
+    //     // },
+    //     apiKeysExternal: {
+    //       elevenlabs: { key: '' },
+    //       //     microsoft: {
+    //       //     key: 'key here',
+    //       //     region: 'westeurope',
+    //       //     endpointId: 'c886c006-f39d-410d-aa9c-b0ff25c5cbb8',
+    //       //     },
+    //     },
+    //     //   clipData: {
+    //     background: {
+    //       color: '#FFFFFF',
+    //     },
+    //     //   },
+    //     session_id: sessionId,
+    //     stream_id: streamId,
+    //     presenter_type: PRESENTER_TYPE,
+    //   },
+    // };
     sendMessage(ws, streamMessage);
   }
 };
 
-function splitArrayIntoChunks(array, size) {
-  if (!Array.isArray(array)) {
-    throw new TypeError('Input should be an array');
-  }
-  if (typeof size !== 'number' || size <= 0) {
-    throw new TypeError('Size should be a positive number');
-  }
-
-  const result = [];
-  for (let i = 0; i < array.length; i += size) {
-    const chunk = array.slice(i, i + size);
-    result.push(chunk);
-  }
-  return result;
-}
-
 const streamAudioButton = document.getElementById('stream-audio-button');
 streamAudioButton.onclick = async () => {
-  const elevenKey = '4d864411748dce926f3de3ca46a7d934';
+  // todo : remove elevenlabs use, only say we stream pcm chunks
+  const elevenKey = '';
   async function stream(text, voiceId = '21m00Tcm4TlvDq8ikWAM') {
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=pcm_16000`,
@@ -192,19 +215,20 @@ streamAudioButton.onclick = async () => {
     return response.body;
   }
 
-  // const streamText = 'This is an example of the WebSocket streaming API Making videos is easy with D-ID';
-  const streamText = `Additional Considerations:
-Voice Selection: To retrieve available voices and their corresponding IDs, refer to the ElevenLabs API documentation.`;
-
+  const streamText =
+    'Mira Murati is an engineer and AI expert who worked at OpenAI, helping create ChatGPT and DALL-E. She later left to start her own AI company, Thinking Machines Lab.';
   const activeStream = await stream(streamText);
   let i = 0;
+  // Note: PCM chunks
   for await (const chunk of activeStream) {
-    const splitted = splitArrayIntoChunks([...chunk], 1000);
+    // Imporatnt Note : 30000 is the max chunk size + keep max concurrent requests up to 300, adjust chunk size as needed
+    const splitted = splitArrayIntoChunks([...chunk], 10000);
     for (const [_, chunk] of splitted.entries()) {
       sendStreamMessage([...chunk], i++);
     }
   }
   sendStreamMessage(Array.from(new Uint8Array(0)), i);
+  console.log('done', i);
 };
 
 const destroyButton = document.getElementById('destroy-button');
@@ -499,16 +523,6 @@ function sendMessage(ws, message) {
   }
 }
 
-function getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize) {
-  if (chunkIndex === totalChunks) {
-    return new Uint8Array(0); // Indicates end of audio stream
-  }
-
-  const start = chunkIndex * chunkSize;
-  const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
-  return new Uint8Array(arrayBuffer.slice(start, end));
-}
-
 function sendStreamMessage(input, index) {
   const streamMessage = {
     type: 'stream-audio',
@@ -523,7 +537,7 @@ function sendStreamMessage(input, index) {
       background: {
         color: '#FFFFFF',
       },
-      index,
+      index, // Note : add index to track the order of the chunks (better performance)
       session_id: sessionId,
       stream_id: streamId,
       presenter_type: PRESENTER_TYPE,
@@ -531,4 +545,20 @@ function sendStreamMessage(input, index) {
   };
 
   sendMessage(ws, streamMessage);
+}
+
+function splitArrayIntoChunks(array, size) {
+  if (!Array.isArray(array)) {
+    throw new TypeError('Input should be an array');
+  }
+  if (typeof size !== 'number' || size <= 0) {
+    throw new TypeError('Size should be a positive number');
+  }
+
+  const result = [];
+  for (let i = 0; i < array.length; i += size) {
+    const chunk = array.slice(i, i + size);
+    result.push(chunk);
+  }
+  return result;
 }
