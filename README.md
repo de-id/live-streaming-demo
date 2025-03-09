@@ -1,6 +1,6 @@
 # Streaming Live Demo by D-ID
 
-- (install express) Open a terminal in the folder and run - `yarn install`
+- (install express) Open a terminal in the folder and run - `npm install`
 - (add your API key) Edit the `api.json` inside the uncompressed folder and replace the emoji with your key
 - (select service) in the same `api.json` file, edit the `service` field to choose your avatar type, use `talks` for an avatar made from an image or `clips` to use a premade HQ avatar from a video
 
