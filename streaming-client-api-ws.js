@@ -1,4 +1,5 @@
 'use strict';
+
 const fetchJsonFile = await fetch('./api.json');
 const DID_API = await fetchJsonFile.json();
 
@@ -81,7 +82,7 @@ connectButton.onclick = async () => {
           const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = data;
           streamId = newStreamId;
           sessionId = newSessionId;
-
+          console.log('init-stream', newStreamId, newSessionId);
           try {
             sessionClientAnswer = await createPeerConnection(offer, iceServers);
             // Step 4: Send SDP answer to WebSocket
@@ -116,36 +117,25 @@ connectButton.onclick = async () => {
   }
 };
 
-const streamAudioButton = document.getElementById('stream-audio-button');
-streamAudioButton.onclick = async () => {
-  if (
-    (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
-    isStreamReady
-  ) {
-    try {
-      await streamAudioInChunks('https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3');
-    } catch (error) {
-      console.error('Error streaming audio:', error);
-    }
-  }
-};
-
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
-  const text =
-    'This is an example of the WebSocket streaming API <break time="1.5s" /> Making videos is easy with D-ID';
-  const chunks = text.split(' ');
+  const text = 'This is an example of the WebSocket streaming API';
+  const text2 = 'Making videos is easy with D-ID';
+
+  let chunks = text.split(' ');
+  chunks.push('<break time="3s" />'); // Note : ssml part tags should be grouped together to be sent on the same chunk
+  chunks.push(...text2.split(' '));
 
   // Indicates end of text stream
   chunks.push('');
 
-  for (const [_, chunk] of chunks.entries()) {
+  for (const [index, chunk] of chunks.entries()) {
     const streamMessage = {
       type: 'stream-text',
       payload: {
         script: {
           type: 'text',
-          input: chunk,
+          input: chunk + ' ',
           provider: {
             type: 'microsoft',
             voice_id: 'en-US-JennyNeural ',
@@ -161,13 +151,55 @@ streamWordButton.onclick = async () => {
         background: {
           color: '#FFFFFF',
         },
+        index, // Note : add index to track the order of the chunks (better performance), optional field
         session_id: sessionId,
         stream_id: streamId,
         presenter_type: PRESENTER_TYPE,
       },
     };
+
     sendMessage(ws, streamMessage);
   }
+};
+
+const streamAudioButton = document.getElementById('stream-audio-button');
+streamAudioButton.onclick = async () => {
+  // Note : we use elevenlabs to stream pcm chunks, you can use any other provider
+  const elevenKey = DID_API.elevenlabsKey;
+  if (!elevenKey) {
+    const errorMessage = 'Please put your elevenlabs key inside ./api.json and restart..';
+    alert(errorMessage);
+    console.error(errorMessage);
+    return;
+  }
+  async function stream(text, voiceId = '21m00Tcm4TlvDq8ikWAM') {
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=pcm_16000`,
+      {
+        method: 'POST',
+        headers: { 'xi-api-key': elevenKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2' }),
+      }
+    );
+
+    return response.body;
+  }
+
+  const streamText =
+    'Mira Murati is an engineer and AI expert who worked at OpenAI. She later left to start her own AI company, Thinking Machines Lab.';
+
+  const activeStream = await stream(streamText);
+  let i = 0;
+  // Note: PCM chunks
+  for await (const chunk of activeStream) {
+    // Imporatnt Note : 30KB is the max chunk size + keep max concurrent requests up to 300, adjust chunk size as needed
+    const splitted = splitArrayIntoChunks([...chunk], 10000); // chunk size: 10KB
+    for (const [_, chunk] of splitted.entries()) {
+      sendStreamMessage([...chunk], i++);
+    }
+  }
+  sendStreamMessage(Array.from(new Uint8Array(0)), i);
+  console.log('done', i);
 };
 
 const destroyButton = document.getElementById('destroy-button');
@@ -462,38 +494,13 @@ function sendMessage(ws, message) {
   }
 }
 
-async function streamAudioInChunks(audioUrl, chunkSize = 1024 * 3) {
-  const response = await fetch(audioUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch audio file: ${response.statusText}`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
-  const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
-
-  for (let chunkIndex = 0; chunkIndex < totalChunks + 1; chunkIndex++) {
-    const chunk = getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize);
-    sendStreamMessage(chunk);
-  }
-}
-
-function getChunk(arrayBuffer, chunkIndex, totalChunks, chunkSize) {
-  if (chunkIndex === totalChunks) {
-    return new Uint8Array(0); // Indicates end of audio stream
-  }
-
-  const start = chunkIndex * chunkSize;
-  const end = Math.min(start + chunkSize, arrayBuffer.byteLength);
-  return new Uint8Array(arrayBuffer.slice(start, end));
-}
-
-function sendStreamMessage(chunk) {
+function sendStreamMessage(input, index) {
   const streamMessage = {
     type: 'stream-audio',
     payload: {
       script: {
         type: 'audio',
-        input: Array.from(chunk),
+        input,
       },
       config: {
         stitch: true,
@@ -501,6 +508,7 @@ function sendStreamMessage(chunk) {
       background: {
         color: '#FFFFFF',
       },
+      index, // Note : add index to track the order of the chunks (better performance), optional field
       session_id: sessionId,
       stream_id: streamId,
       presenter_type: PRESENTER_TYPE,
@@ -508,4 +516,20 @@ function sendStreamMessage(chunk) {
   };
 
   sendMessage(ws, streamMessage);
+}
+
+function splitArrayIntoChunks(array, size) {
+  if (!Array.isArray(array)) {
+    throw new TypeError('Input should be an array');
+  }
+  if (typeof size !== 'number' || size <= 0) {
+    throw new TypeError('Size should be a positive number');
+  }
+
+  const result = [];
+  for (let i = 0; i < array.length; i += size) {
+    const chunk = array.slice(i, i + size);
+    result.push(chunk);
+  }
+  return result;
 }
