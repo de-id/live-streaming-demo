@@ -151,7 +151,7 @@ streamWordButton.onclick = async () => {
         background: {
           color: '#FFFFFF',
         },
-        index, // Note : add index to track the order of the chunks (better performance)
+        index, // Note : add index to track the order of the chunks (better performance), optional field
         session_id: sessionId,
         stream_id: streamId,
         presenter_type: PRESENTER_TYPE,
@@ -547,7 +547,7 @@ function sendStreamMessage(input, index) {
       background: {
         color: '#FFFFFF',
       },
-      index, // Note : add index to track the order of the chunks (better performance)
+      index, // Note : add index to track the order of the chunks (better performance), optional field
       session_id: sessionId,
       stream_id: streamId,
       presenter_type: PRESENTER_TYPE,
