@@ -157,45 +157,6 @@ streamWordButton.onclick = async () => {
         presenter_type: PRESENTER_TYPE,
       },
     };
-    //  todo : remove this
-    // v1
-    // const streamMessage = {
-    //   type: 'stream-text',
-    //   payload: {
-    //     input: chunk,
-    //     provider: {
-    //       type: 'microsoft',
-    //       voice_id: 'en-US-JennyNeural ',
-    //     },
-    //     //   provider: {
-    //     //     type: 'elevenlabs',
-    //     //     voice_id: '21m00Tcm4TlvDq8ikWAM',
-    //     //   },
-    //     config: {
-    //       stitch: true,
-    //     },
-    //     // provider: {
-    //     //   type: 'microsoft',
-    //     //   voice_id: 'en-AU-WilliamNeural',
-    //     // },
-    //     apiKeysExternal: {
-    //       elevenlabs: { key: '' },
-    //       //     microsoft: {
-    //       //     key: 'key here',
-    //       //     region: 'westeurope',
-    //       //     endpointId: 'c886c006-f39d-410d-aa9c-b0ff25c5cbb8',
-    //       //     },
-    //     },
-    //     //   clipData: {
-    //     background: {
-    //       color: '#FFFFFF',
-    //     },
-    //     //   },
-    //     session_id: sessionId,
-    //     stream_id: streamId,
-    //     presenter_type: PRESENTER_TYPE,
-    //   },
-    // };
 
     sendMessage(ws, streamMessage);
   }
