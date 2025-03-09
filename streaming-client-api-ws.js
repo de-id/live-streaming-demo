@@ -123,7 +123,7 @@ streamWordButton.onclick = async () => {
   const text2 = 'Making videos is easy with D-ID';
 
   let chunks = text.split(' ');
-  chunks.push('<break time="3s" />');
+  chunks.push('<break time="3s" />'); // Note : ssml part tags should be grouped together to be sent on the same chunk
   chunks.push(...text2.split(' '));
 
   // Indicates end of text stream
