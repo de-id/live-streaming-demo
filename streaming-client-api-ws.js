@@ -1,4 +1,5 @@
 'use strict';
+
 const fetchJsonFile = await fetch('./api.json');
 const DID_API = await fetchJsonFile.json();
 
@@ -156,6 +157,7 @@ streamWordButton.onclick = async () => {
         presenter_type: PRESENTER_TYPE,
       },
     };
+    //  todo : remove this
     // v1
     // const streamMessage = {
     //   type: 'stream-text',
@@ -194,6 +196,7 @@ streamWordButton.onclick = async () => {
     //     presenter_type: PRESENTER_TYPE,
     //   },
     // };
+
     sendMessage(ws, streamMessage);
   }
 };
@@ -222,13 +225,14 @@ streamAudioButton.onclick = async () => {
   }
 
   const streamText =
-    'Mira Murati is an engineer and AI expert who worked at OpenAI, helping create ChatGPT and DALL-E. She later left to start her own AI company, Thinking Machines Lab.';
+    'Mira Murati is an engineer and AI expert who worked at OpenAI. She later left to start her own AI company, Thinking Machines Lab.';
+
   const activeStream = await stream(streamText);
   let i = 0;
   // Note: PCM chunks
   for await (const chunk of activeStream) {
-    // Imporatnt Note : 30000 is the max chunk size + keep max concurrent requests up to 300, adjust chunk size as needed
-    const splitted = splitArrayIntoChunks([...chunk], 10000);
+    // Imporatnt Note : 30KB is the max chunk size + keep max concurrent requests up to 300, adjust chunk size as needed
+    const splitted = splitArrayIntoChunks([...chunk], 10000); // chunk size: 10KB
     for (const [_, chunk] of splitted.entries()) {
       sendStreamMessage([...chunk], i++);
     }
