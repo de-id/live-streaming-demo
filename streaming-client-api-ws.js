@@ -119,8 +119,8 @@ connectButton.onclick = async () => {
 
 const streamWordButton = document.getElementById('stream-word-button');
 streamWordButton.onclick = async () => {
-  const text = 'This is an example of the WebSocket streaming API';
-  const text2 = 'Making videos is easy with D-ID';
+  const text = 'This is a demo of the D-ID WebSocket Streaming API with text chunks.';
+  const text2 = 'Real-time video streaming is easy with D-ID';
 
   let chunks = text.split(' ');
   chunks.push('<break time="3s" />'); // Note : ssml part tags should be grouped together to be sent on the same chunk
@@ -138,7 +138,7 @@ streamWordButton.onclick = async () => {
           input: chunk + ' ',
           provider: {
             type: 'microsoft',
-            voice_id: 'en-US-JennyNeural ',
+            voice_id: 'en-US-JennyNeural',
           },
           ssml: true,
         },
@@ -178,7 +178,7 @@ streamAudioButton.onclick = async () => {
       {
         method: 'POST',
         headers: { 'xi-api-key': elevenKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2' }),
+        body: JSON.stringify({ text, model_id: 'eleven_turbo_v2' }),
       }
     );
 
@@ -186,7 +186,7 @@ streamAudioButton.onclick = async () => {
   }
 
   const streamText =
-    'Mira Murati is an engineer and AI expert who worked at OpenAI. She later left to start her own AI company, Thinking Machines Lab.';
+    'This is a demo of the D-ID WebSocket Streaming API with audio PCM chunks. <break time="1s" /> Real-time video streaming is easy with D-ID';
 
   const activeStream = await stream(streamText);
   let i = 0;
