@@ -178,7 +178,8 @@ streamAudioButton.onclick = async () => {
       {
         method: 'POST',
         headers: { 'xi-api-key': elevenKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, model_id: 'eleven_turbo_v2' }),
+        body: JSON.stringify({ text, model_id: 'eleven_turbo_v2_5' }),
+        // Please see the list of available models here - https://docs.d-id.com/reference/tts-elevenlabs#%EF%B8%8F-voice-config
       }
     );
 

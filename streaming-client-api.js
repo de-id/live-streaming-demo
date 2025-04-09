@@ -110,8 +110,19 @@ startButton.onclick = async () => {
       },
       body: JSON.stringify({
         script: {
-          type: 'audio',
-          audio_url: 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
+          // Input based on the audio file
+          // type: 'audio',
+          // audio_url: 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
+
+          // Input based on the text
+          type: 'text',
+          provider: {
+            type: 'microsoft',
+            voice_id: 'en-US-AndrewNeural'
+          },
+          input: `Scale up your video production with a digital twin, who can say whatever you want in any language you choose. Train an agent on your content and enable 24/7 personal engagement with your community. <break time=\"1500ms"/>`,
+          ssml: true,
+          // Please note that the SSML notation is different with ElevenLabs voices. Refer to this documentation - https://docs.d-id.com/reference/tts-elevenlabs
         },
         ...(DID_API.service === 'clips' && {
           background: {
