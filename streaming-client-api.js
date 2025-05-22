@@ -46,6 +46,32 @@ const presenterInputByService = {
   },
 };
 
+const scriptConfigs = {
+  audio: {
+    type: 'audio',
+    audio_url: 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
+  },
+  text: {
+    type: 'text',
+    provider: { type: 'microsoft', voice_id: 'en-US-AndrewNeural' },
+    input: `Scale up your video production with a digital twin, who can say whatever you want in any language you choose. Train an agent on your content and enable 24/7 personal engagement with your community. <break time="1500ms"/>`,
+    // Please note that the SSML notation is different with ElevenLabs voices. Refer to this documentation - https://docs.d-id.com/reference/tts-elevenlabs
+    ssml: true,
+  },
+  llm: {
+    type: 'llm',
+    provider: { type: 'microsoft', voice_id: 'en-US-AndrewNeural' },
+    llm: {
+      provider: 'openai',
+      model: 'gpt-35-turbo',
+      messages: [
+        { role: 'system', content: 'you follow commands to the point', created_at: new Date().toISOString() },
+        { role: 'user', content: 'make up a story with exactly 4 sentences', created_at: new Date().toISOString() },
+      ],
+    },
+  },
+};
+
 const connectButton = document.getElementById('connect-button');
 connectButton.onclick = async () => {
   if (peerConnection && peerConnection.connectionState === 'connected') {
@@ -95,8 +121,7 @@ connectButton.onclick = async () => {
   });
 };
 
-const startButton = document.getElementById('start-button');
-startButton.onclick = async () => {
+async function startStreamWithScript(script) {
   // connectionState not supported in firefox
   if (
     (peerConnection?.signalingState === 'stable' || peerConnection?.iceConnectionState === 'connected') &&
@@ -109,34 +134,22 @@ startButton.onclick = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        script: {
-          // Input based on the audio file
-          // type: 'audio',
-          // audio_url: 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/webrtc.mp3',
-
-          // Input based on the text
-          type: 'text',
-          provider: {
-            type: 'microsoft',
-            voice_id: 'en-US-AndrewNeural'
-          },
-          input: `Scale up your video production with a digital twin, who can say whatever you want in any language you choose. Train an agent on your content and enable 24/7 personal engagement with your community. <break time=\"1500ms"/>`,
-          ssml: true,
-          // Please note that the SSML notation is different with ElevenLabs voices. Refer to this documentation - https://docs.d-id.com/reference/tts-elevenlabs
-        },
-        ...(DID_API.service === 'clips' && {
-          background: {
-            color: '#FFFFFF',
-          },
-        }),
-        config: {
-          stitch: true,
-        },
+        script,
+        config: { stitch: true },
         session_id: sessionId,
+        ...(DID_API.service === 'clips' && {
+          background: { color: '#FFFFFF' },
+        }),
       }),
     });
+
+    return response;
   }
-};
+}
+
+document.getElementById('audio-button')?.addEventListener('click', () => { startStreamWithScript(scriptConfigs.audio) });
+document.getElementById('text-button')?.addEventListener('click', () => { startStreamWithScript(scriptConfigs.text) });
+document.getElementById('llm-button')?.addEventListener('click', () => { startStreamWithScript(scriptConfigs.llm) });
 
 const destroyButton = document.getElementById('destroy-button');
 destroyButton.onclick = async () => {

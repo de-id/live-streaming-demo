@@ -103,10 +103,18 @@
         margin: 0 auto;
       }
 
-      #buttons {
-        clear: both;
-        padding: 0 0 0 0;
-        text-align: center;
+      .button-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .button-row {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 10px;
       }
 
       button {
@@ -183,10 +191,16 @@
       <br />
 
       <!-- added div#buttons -->
-      <div id="buttons">
-        <button id="connect-button" type="button">Connect</button>
-        <button id="start-button" type="button">Start</button>
-        <button id="destroy-button" type="button">Destroy</button>
+      <div class="button-container">
+        <div class="button-row">
+          <button id="connect-button" type="button">Connect</button>
+          <button id="destroy-button" type="button">Destroy</button>
+        </div>
+        <div class="button-row">
+          <button id="audio-button" type="button">Audio</button>
+          <button id="text-button" type="button">Text</button>
+          <button id="llm-button" type="button">LLM</button>
+        </div>
       </div>
 
       <!-- added div#status -->
