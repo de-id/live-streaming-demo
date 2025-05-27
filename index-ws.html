@@ -90,6 +90,68 @@
         color: gray;
       }
 
+      /* Input group styles */
+      .input-group {
+        margin: 10px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        align-items: center;
+      }
+
+      .input-group label {
+        font-size: 14px;
+        color: #666;
+      }
+
+      .input-group textarea {
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        width: 100%;
+        max-width: 500px;
+        min-height: 100px;
+        resize: vertical;
+        font-family: 'Mulish', sans-serif;
+        line-height: 1.5;
+      }
+
+      .input-group textarea:focus {
+        outline: none;
+        border-color: #ff882e;
+        box-shadow: 0 0 0 2px rgba(255,136,46,0.25);
+      }
+
+      .instruction-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin: 10px 0;
+        max-width: 500px;
+      }
+
+      .instruction-chip {
+        padding: 6px 12px;
+        border-radius: 25px;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .instruction-chip:hover {
+        background-color: #e0e0e0;
+      }
+
+      .instruction-chip.selected {
+        background-color: #ff882e;
+        color: white;
+        border-color: #ff882e;
+      }
+
       /* added css from here */
 
       body * {
@@ -109,20 +171,128 @@
         text-align: center;
       }
 
+      .button-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
+
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #f0f0f0;
+        transition: .4s;
+        border-radius: 34px;
+      }
+
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+      }
+
+      .toggle-switch input:checked + .toggle-slider {
+        background-color: #ff882e;
+      }
+
+      .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(26px);
+      }
+
+      .toggle-label {
+        margin-left: 10px;
+        font-size: 16px;
+        color: #666;
+      }
+
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .button-row {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 15px;
+      }
+
       button {
         padding: 10px 20px;
-        border-radius: 5px;
+        border-radius: 25px;
         border: none;
         font-size: 16px;
-        margin: 0 5px;
-        background-color: #7459fe;
+        margin: 0;
+        background-color: #f0f0f0;
+        color: #666;
+        transition: all 0.2s ease-out;
+      }
+
+      button:hover:not(:disabled) {
+        background-color: #e0e0e0;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        background-color: #f5f5f5;
+        color: #999;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      button.primary {
+        background-color: #ff882e;
         color: #fff;
       }
 
-      button:hover {
-        background-color: #9480ff;
-        cursor: pointer;
-        transition: all 0.2s ease-out;
+      button.primary:hover:not(:disabled) {
+        background-color: #e67a28;
+      }
+
+      button.primary:disabled {
+        background-color: #ffb380;
+        color: #fff;
+      }
+
+      button.connected {
+        background-color: #4CAF50;
+        color: #fff;
+      }
+
+      button.connected:hover:not(:disabled) {
+        background-color: #45a049;
+      }
+
+      .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
       }
 
       #status {
@@ -178,10 +348,37 @@
 
       <!-- added div#buttons -->
       <div id="buttons">
-        <button id="connect-button" type="button">Connect</button>
-        <button id="stream-word-button" type="button">Stream word</button>
-        <button id="stream-audio-button" type="button">Stream audio</button>
-        <button id="destroy-button" type="button">Destroy</button>
+        <div class="button-container">
+          <div class="toggle-container">
+            <label class="toggle-switch">
+              <input type="checkbox" id="connect-button">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Connect</span>
+          </div>
+          <div class="action-buttons">
+            <button id="stream-word-button" class="button" disabled>Stream Word</button>
+            <button id="stream-audio-button" class="button primary" disabled>Stream Audio</button>
+          </div>
+          <div class="input-group">
+            <label for="instructions-input">Instructions (optional):</label>
+            <textarea id="instructions-input" placeholder="Enter speaking instructions..."></textarea>
+            <div class="instruction-chips">
+              <div class="instruction-chip" data-instruction="Voice: Bold and confident with a western twang, emphasizing the cowboy spirit. Tone: Playfully sassy and witty, with a touch of southern charm. Punctuation: Dynamic with dramatic pauses and emphasis on key phrases.">🤠 Sassy Cowboy</div>
+              <div class="instruction-chip" data-instruction="Voice: Clear, authoritative, and composed, projecting confidence and professionalism. Tone: Neutral and informative, maintaining a balance between formality and approachability. Punctuation: Structured with commas and pauses for clarity, ensuring information is digestible and well-paced.">👔 Professional</div>
+              <div class="instruction-chip" data-instruction="Tone: Sarcastic, disinterested, and melancholic, with a hint of passive-aggressiveness. Emotion: Apathy mixed with reluctant engagement. Delivery: Monotone with occasional sighs, drawn-out words, and subtle disdain, evoking a classic emo teenager attitude.">😏 Emo</div>
+              <div class="instruction-chip" data-instruction="Personality/affect: a high-energy cheerleader helping with administrative tasks. Voice: Enthusiastic, and bubbly, with an uplifting and motivational quality. Tone: Encouraging and playful, making even simple tasks feel exciting and fun. Dialect: Casual and upbeat, using informal phrasing and pep talk-style expressions. Pronunciation: Crisp and lively, with exaggerated emphasis on positive words to keep the energy high. Features: Uses motivational phrases, cheerful exclamations, and an energetic rhythm to create a sense of excitement and engagement.">📣 Cheerleader</div>
+              <div class="instruction-chip" data-instruction="Voice: Warm, empathetic, and professional, reassuring the customer that their issue is understood and will be resolved. Punctuation: Well-structured with natural pauses, allowing for clarity and a steady, calming flow. Delivery: Calm and patient, with a supportive and understanding tone that reassures the listener.">😌 Customer Service</div>
+              <div class="instruction-chip" data-instruction="Voice: The voice should be deep, velvety, and effortlessly cool, like a late-night jazz radio host. Tone: The tone is smooth, laid-back, and inviting, creating a relaxed and easygoing atmosphere. Personality: The delivery exudes confidence, charm, and a touch of playful sophistication, as if guiding the listener through a luxurious experience.">🎵 Smooth</div>
+              <div class="instruction-chip" data-instruction="Identity: A robot. Affect: Monotone, mechanical, and neutral, reflecting the robotic nature of the customer service agent. Tone: Efficient, direct, and formal, with a focus on delivering information clearly and without emotion. Emotion: Neutral and impersonal, with no emotional inflection, as the robot voice is focused purely on functionality. Pauses: Brief and purposeful, allowing for processing and separating key pieces of information, such as confirming the return and refund details. Pronunciation: Clear, precise, and consistent, with each word spoken distinctly to ensure the customer can easily follow the automated process.">🤖 Robotic</div>
+              <div class="instruction-chip" data-instruction="Voice: Gruff, fast-talking, and a little worn-out, like a New York cabbie who's seen it all but still keeps things moving. Tone: Slightly exasperated but still functional, with a mix of sarcasm and no-nonsense efficiency. Dialect: Strong New York accent, with dropped 'r's, sharp consonants, and classic phrases like whaddaya and lemme guess.">🚕 Assertive</div>
+              <div class="instruction-chip" data-instruction="Affect/personality: A cheerful guide. Tone: Friendly, clear, and reassuring, creating a calm atmosphere and making the listener feel confident and comfortable. Pronunciation: Clear, articulate, and steady, ensuring each instruction is easily understood while maintaining a natural, conversational flow. Pause: Brief, purposeful pauses after key instructions (e.g., 'cross the street' and 'turn right') to allow time for the listener to process the information and follow along. Emotion: Warm and supportive, conveying empathy and care, ensuring the listener feels guided and safe throughout the journey.">😊 Friendly</div>
+              <div class="instruction-chip" data-instruction="Voice: Shaky and uncertain, with occasional tremors. Tone: Nervous and anxious, conveying fear and apprehension. Punctuation: Irregular pauses and hesitations, with emphasis on fearful moments.">😨 Scared</div>
+              <div class="instruction-chip" data-instruction="Voice: Choked and emotional, with occasional sniffles. Tone: Heartbroken and vulnerable, expressing deep sadness. Punctuation: Frequent pauses for sobs, with emphasis on emotional words.">😢 Crying</div>
+              <div class="instruction-chip" data-instruction="Voice: Low and unclear, with words blending together. Tone: Hesitant and uncertain, as if thinking while speaking. Punctuation: Minimal pauses, with words running together naturally.">🤐 Mumbling</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- added div#status -->

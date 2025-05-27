@@ -50,140 +50,198 @@ const presenterInputByService = {
 const PRESENTER_TYPE = DID_API.service === 'clips' ? 'clip' : 'talk';
 
 const connectButton = document.getElementById('connect-button');
+const streamWordButton = document.getElementById('stream-word-button');
+const streamAudioButton = document.getElementById('stream-audio-button');
 let ws;
 
-connectButton.onclick = async () => {
-  if (peerConnection && peerConnection.connectionState === 'connected') {
-    return;
+function updateButtonStates(isConnected) {
+  connectButton.textContent = isConnected ? 'Disconnect' : 'Connect';
+  connectButton.classList.toggle('connected', isConnected);
+  streamWordButton.disabled = !isConnected;
+  streamAudioButton.disabled = !isConnected;
+}
+
+// Initialize button states
+updateButtonStates(false);
+
+// Connect button click handler
+connectButton.addEventListener('change', async () => {
+  if (connectButton.checked) {
+    // Connect logic
+    try {
+      // Step 1: Connect to WebSocket
+      ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.key);
+      updateButtonStates(true);
+
+      // Step 2: Send "init-stream" message to WebSocket
+      const startStreamMessage = {
+        type: 'init-stream',
+        payload: {
+          ...presenterInputByService[DID_API.service],
+          presenter_type: PRESENTER_TYPE,
+        },
+      };
+      sendMessage(ws, startStreamMessage);
+
+      // Step 3: Handle WebSocket responses by message type
+      ws.onmessage = async (event) => {
+        const data = JSON.parse(event.data);
+        switch (data.messageType) {
+          case 'init-stream':
+            const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = data;
+            streamId = newStreamId;
+            sessionId = newSessionId;
+            console.log('init-stream', newStreamId, newSessionId);
+            try {
+              sessionClientAnswer = await createPeerConnection(offer, iceServers);
+              // Step 4: Send SDP answer to WebSocket
+              const sdpMessage = {
+                type: 'sdp',
+                payload: {
+                  answer: sessionClientAnswer,
+                  session_id: sessionId,
+                  presenter_type: PRESENTER_TYPE,
+                },
+              };
+              sendMessage(ws, sdpMessage);
+            } catch (e) {
+              console.error('Error during streaming setup', e);
+              stopAllStreams();
+              closePC();
+              connectButton.checked = false;
+              updateButtonStates(false);
+              return;
+            }
+            break;
+
+          case 'sdp':
+            console.log('SDP message received:', event.data);
+            break;
+
+          case 'delete-stream':
+            console.log('Stream deleted:', event.data);
+            break;
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        connectButton.checked = false;
+        updateButtonStates(false);
+        stopAllStreams();
+        closePC();
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        connectButton.checked = false;
+        updateButtonStates(false);
+        stopAllStreams();
+        closePC();
+      };
+
+    } catch (error) {
+      console.error('Failed to connect and set up stream:', error);
+      connectButton.checked = false;
+      updateButtonStates(false);
+    }
+  } else {
+    // Disconnect logic
+    if (ws) {
+      ws.send(JSON.stringify({ type: 'delete' }));
+      ws.close();
+      ws = null;
+    }
+    updateButtonStates(false);
   }
+});
 
-  stopAllStreams();
-  closePC();
+const instructionsInput = document.getElementById('instructions-input');
 
-  try {
-    // Step 1: Connect to WebSocket
-    ws = await connectToWebSocket(DID_API.websocketUrl, DID_API.key);
+// Add click handlers for instruction chips
+document.querySelectorAll('.instruction-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    // Remove selected class from all chips
+    document.querySelectorAll('.instruction-chip').forEach(c => c.classList.remove('selected'));
+    // Add selected class to clicked chip
+    chip.classList.add('selected');
+    // Set the input value
+    instructionsInput.value = chip.dataset.instruction;
+  });
+});
 
-    // Step 2: Send "init-stream" message to WebSocket
-    const startStreamMessage = {
-      type: 'init-stream',
-      payload: {
-        ...presenterInputByService[DID_API.service],
-        presenter_type: PRESENTER_TYPE,
-      },
-    };
-    sendMessage(ws, startStreamMessage);
+// Clear selection when input is modified
+instructionsInput.addEventListener('input', () => {
+  document.querySelectorAll('.instruction-chip').forEach(c => c.classList.remove('selected'));
+});
 
-    // Step 3: Handle WebSocket responses by message type
-    ws.onmessage = async (event) => {
-      const data = JSON.parse(event.data);
-      switch (data.messageType) {
-        case 'init-stream':
-          const { id: newStreamId, offer, ice_servers: iceServers, session_id: newSessionId } = data;
-          streamId = newStreamId;
-          sessionId = newSessionId;
-          console.log('init-stream', newStreamId, newSessionId);
-          try {
-            sessionClientAnswer = await createPeerConnection(offer, iceServers);
-            // Step 4: Send SDP answer to WebSocket
-            const sdpMessage = {
-              type: 'sdp',
-              payload: {
-                answer: sessionClientAnswer,
-                session_id: sessionId,
-                presenter_type: PRESENTER_TYPE,
-              },
-            };
-            sendMessage(ws, sdpMessage);
-          } catch (e) {
-            console.error('Error during streaming setup', e);
-            stopAllStreams();
-            closePC();
-            return;
-          }
-          break;
-
-        case 'sdp':
-          console.log('SDP message received:', event.data);
-          break;
-
-        case 'delete-stream':
-          console.log('Stream deleted:', event.data);
-          break;
-      }
-    };
-  } catch (error) {
-    console.error('Failed to connect and set up stream:', error.type);
-  }
-};
-
-const streamWordButton = document.getElementById('stream-word-button');
-streamWordButton.onclick = async () => {
-  const text = 'This is a demo of the D-ID WebSocket Streaming API with text chunks.';
-  const text2 = 'Real-time video streaming is easy with D-ID';
-
-  let chunks = text.split(' ');
-  chunks.push('<break time="3s" />'); // Note : ssml part tags should be grouped together to be sent on the same chunk
-  chunks.push(...text2.split(' '));
-
-  // Indicates end of text stream
-  chunks.push('');
-
-  for (const [index, chunk] of chunks.entries()) {
-    const streamMessage = {
-      type: 'stream-text',
-      payload: {
-        script: {
-          type: 'text',
-          input: chunk + ' ',
-          provider: {
-            type: 'microsoft',
-            voice_id: 'en-US-JennyNeural',
-          },
-          ssml: true,
-        },
-        config: {
-          stitch: true,
-        },
-        apiKeysExternal: {
-          elevenlabs: { key: '' },
-        },
-        background: {
-          color: '#FFFFFF',
-        },
-        index, // Note : add index to track the order of the chunks (better performance), optional field
-        session_id: sessionId,
-        stream_id: streamId,
-        presenter_type: PRESENTER_TYPE,
-      },
-    };
-
-    sendMessage(ws, streamMessage);
-  }
-};
-
-const streamAudioButton = document.getElementById('stream-audio-button');
 streamAudioButton.onclick = async () => {
-  // Note : we use elevenlabs to stream pcm chunks, you can use any other provider
-  const elevenKey = DID_API.elevenlabsKey;
-  if (!elevenKey) {
-    const errorMessage = 'Please put your elevenlabs key inside ./api.json and restart..';
+  const azureKey = DID_API.azureKey;
+  const azureEndpoint = DID_API.azureEndpoint;
+  if (!azureKey || !azureEndpoint) {
+    const errorMessage = 'Please put your Azure OpenAI key and endpoint inside ./api.json and restart..';
     alert(errorMessage);
     console.error(errorMessage);
     return;
   }
-  async function stream(text, voiceId = '21m00Tcm4TlvDq8ikWAM') {
+  async function stream(text) {
+    const requestBody = {
+      model: 'gpt-4o-mini-tts',
+      voice: 'ballad',
+      input: text,
+      response_format: "pcm",
+    };
+
+    // Only add instructions if they are provided
+    const instructions = instructionsInput.value.trim();
+    if (instructions) {
+      requestBody.instructions = instructions;
+    }
+
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=pcm_16000`,
+      azureEndpoint,
       {
         method: 'POST',
-        headers: { 'xi-api-key': elevenKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, model_id: 'eleven_turbo_v2_5' }),
-        // Please see the list of available models here - https://docs.d-id.com/reference/tts-elevenlabs#%EF%B8%8F-voice-config
+        headers: { 
+          'api-key': azureKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
       }
     );
+    const ratio = 24/16; // 1.5 Transformer for resampling from 24kHz to 16kHz using linear interpolation
 
-    return response.body;
+    const transformer = {
+      transform(chunk, controller) {
+        const inputData = new Int16Array(chunk.buffer, chunk.byteOffset, chunk.byteLength / 2);
+        const outputLength = Math.floor(inputData.length / ratio);
+        const outputData = new Int16Array(outputLength);
+
+        for (let i = 0; i < outputLength; i++) {
+          const inputIndex = i * ratio;
+          const lowerIndex = Math.floor(inputIndex);
+          const upperIndex = Math.min(lowerIndex + 1, inputData.length - 1);
+          const lambda = inputIndex - lowerIndex;
+
+          // interpolate and convert to int16 signed integer
+          outputData[i] = Math.round(
+            lambda * inputData[upperIndex] + (1 - lambda) * inputData[lowerIndex]
+          );
+          
+        }
+        // convert to raw bytes - 2 bytes per sample
+        const rawBytes = new Uint8Array(outputData.length * 2);
+        for (let i = 0; i < outputData.length; i++) {
+          rawBytes[i * 2] = outputData[i] & 0xFF;
+          rawBytes[i * 2 + 1] = (outputData[i] >> 8) & 0xFF;
+        }
+        controller.enqueue(rawBytes);
+      }
+    };
+    // apply transformer to response.body
+    const resampledStream = response.body.pipeThrough(new TransformStream(transformer));
+  
+    return resampledStream;
   }
 
   const streamText =
@@ -193,7 +251,7 @@ streamAudioButton.onclick = async () => {
   let i = 0;
   // Note: PCM chunks
   for await (const chunk of activeStream) {
-    // Imporatnt Note : 30KB is the max chunk size + keep max concurrent requests up to 300, adjust chunk size as needed
+    // Important Note : 30KB is the max chunk size + keep max concurrent requests up to 300, adjust chunk size as needed
     const splitted = splitArrayIntoChunks([...chunk], 10000); // chunk size: 10KB
     for (const [_, chunk] of splitted.entries()) {
       sendStreamMessage([...chunk], i++);
@@ -201,27 +259,6 @@ streamAudioButton.onclick = async () => {
   }
   sendStreamMessage(Array.from(new Uint8Array(0)), i);
   console.log('done', i);
-};
-
-const destroyButton = document.getElementById('destroy-button');
-destroyButton.onclick = async () => {
-  const streamMessage = {
-    type: 'delete-stream',
-    payload: {
-      session_id: sessionId,
-      stream_id: streamId,
-    },
-  };
-  sendMessage(ws, streamMessage);
-
-  // Close WebSocket connection
-  if (ws) {
-    ws.close();
-    ws = null;
-  }
-
-  stopAllStreams();
-  closePC();
 };
 
 function onIceGatheringStateChange() {
