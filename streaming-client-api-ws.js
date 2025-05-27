@@ -3,6 +3,11 @@
 const fetchJsonFile = await fetch('./api.json');
 const DID_API = await fetchJsonFile.json();
 
+// Azure OpenAI constants
+const AZURE_MODEL = "gpt-4o-mini-tts";
+const AZURE_API_VERSION = "2025-03-01-preview";
+const AZURE_DEPLOYMENT = "gpt-4o-mini-tts";
+
 if (DID_API.key == '🤫') alert('Please put your api key inside ./api.json and restart..');
 
 const RTCPeerConnection = (
@@ -186,7 +191,7 @@ streamAudioButton.onclick = async () => {
   }
   async function stream(text) {
     const requestBody = {
-      model: 'gpt-4o-mini-tts',
+      model: AZURE_MODEL,
       voice: 'ballad',
       input: text,
       response_format: "pcm",
@@ -199,7 +204,7 @@ streamAudioButton.onclick = async () => {
     }
 
     const response = await fetch(
-      azureEndpoint,
+      `${azureEndpoint}/openai/deployments/${AZURE_DEPLOYMENT}/audio/speech?api-version=${AZURE_API_VERSION}`,
       {
         method: 'POST',
         headers: { 
@@ -209,25 +214,63 @@ streamAudioButton.onclick = async () => {
         body: JSON.stringify(requestBody)
       }
     );
+
+    function applyLowPass(input, windowSize = 3) {
+      const output = new Int16Array(input.length);
+      for (let i = 0; i < input.length; i++) {
+        let sum = 0;
+        let count = 0;
+        for (let j = -Math.floor(windowSize/2); j <= Math.floor(windowSize/2); j++) {
+          const idx = i + j;
+          if (idx >= 0 && idx < input.length) {
+            sum += input[idx];
+            count++;
+          }
+        }
+        output[i] = sum / count;
+      }
+      return output;
+    }
+
+    function normalizeInt16(samples) {
+      let max = 0;
+      for (let i = 0; i < samples.length; i++) {
+        max = Math.max(max, Math.abs(samples[i]));
+      }
+
+      if (max === 0) return samples;
+
+      const scale = 32767 / max;
+      const output = new Int16Array(samples.length);
+      for (let i = 0; i < samples.length; i++) {
+        output[i] = Math.round(samples[i] * scale);
+      }
+      return output;
+    }
+
     const ratio = 24/16; // 1.5 Transformer for resampling from 24kHz to 16kHz using linear interpolation
 
     const transformer = {
       transform(chunk, controller) {
         const inputData = new Int16Array(chunk.buffer, chunk.byteOffset, chunk.byteLength / 2);
-        const outputLength = Math.floor(inputData.length / ratio);
+        // Apply low-pass filter before resampling
+        const filteredData = applyLowPass(inputData);
+        // Normalize the filtered data
+        //const normalizedData = normalizeInt16(filteredData);
+        const normalizedData = filteredData//normalizeInt16(filteredData);
+        const outputLength = Math.floor(normalizedData.length / ratio);
         const outputData = new Int16Array(outputLength);
 
         for (let i = 0; i < outputLength; i++) {
           const inputIndex = i * ratio;
           const lowerIndex = Math.floor(inputIndex);
-          const upperIndex = Math.min(lowerIndex + 1, inputData.length - 1);
+          const upperIndex = Math.min(lowerIndex + 1, normalizedData.length - 1);
           const lambda = inputIndex - lowerIndex;
 
           // interpolate and convert to int16 signed integer
           outputData[i] = Math.round(
-            lambda * inputData[upperIndex] + (1 - lambda) * inputData[lowerIndex]
+            lambda * normalizedData[upperIndex] + (1 - lambda) * normalizedData[lowerIndex]
           );
-          
         }
         // convert to raw bytes - 2 bytes per sample
         const rawBytes = new Uint8Array(outputData.length * 2);

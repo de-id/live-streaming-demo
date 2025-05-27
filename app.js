@@ -20,10 +20,15 @@ app.get('/agents', function (req, res) {
   res.sendFile(__dirname + '/index-agents.html');
 });
 
+// Route for the chat demo
+app.get('/chat', (req, res) => {
+  res.sendFile(__dirname + '/ws-chat-demo.html');
+});
+
 const server = http.createServer(app);
 
 server.listen(port, () =>
   console.log(
-    `Server started on port localhost:${port}\nhttp://localhost:${port}\nhttp://localhost:${port}/agents\nhttp://localhost:${port}/ws-streaming`
+    `Server started on port localhost:${port}\nhttp://localhost:${port}\nhttp://localhost:${port}/agents\nhttp://localhost:${port}/ws-streaming\nhttp://localhost:${port}/chat`
   )
 );
