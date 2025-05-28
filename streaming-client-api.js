@@ -58,18 +58,6 @@ const scriptConfigs = {
     // Please note that the SSML notation is different with ElevenLabs voices. Refer to this documentation - https://docs.d-id.com/reference/tts-elevenlabs
     ssml: true,
   },
-  llm: {
-    type: 'llm',
-    provider: { type: 'microsoft', voice_id: 'en-US-AndrewNeural' },
-    llm: {
-      provider: 'openai',
-      model: 'gpt-35-turbo',
-      messages: [
-        { role: 'system', content: 'you follow commands to the point', created_at: new Date().toISOString() },
-        { role: 'user', content: 'make up a story with exactly 4 sentences', created_at: new Date().toISOString() },
-      ],
-    },
-  },
 };
 
 const connectButton = document.getElementById('connect-button');
@@ -149,7 +137,6 @@ async function startStreamWithScript(script) {
 
 document.getElementById('audio-button')?.addEventListener('click', () => { startStreamWithScript(scriptConfigs.audio) });
 document.getElementById('text-button')?.addEventListener('click', () => { startStreamWithScript(scriptConfigs.text) });
-document.getElementById('llm-button')?.addEventListener('click', () => { startStreamWithScript(scriptConfigs.llm) });
 
 const destroyButton = document.getElementById('destroy-button');
 destroyButton.onclick = async () => {
