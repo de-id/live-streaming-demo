@@ -1,0 +1,34 @@
+{
+  "author": "D-ID",
+  "name": "@d-id/custom-llm-demo",
+  "version": "1.0.0",
+  "description": "Custom LLM Demo",
+  "private": true,
+  "license": "ISC",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "yarn type-check",
+    "type-check": "tsc --noEmit --skipLibCheck",
+    "serverless:deploy": "serverless deploy",
+    "serverless:package": "serverless package --stage dev"
+  },
+  "dependencies": {
+    "@types/node": "^24.2.0",
+    "aws-sdk": "2.1055.0",
+    "dotenv": "^16.4.7",
+    "node": "^22.18.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.17",
+    "@types/node": "^20.8.2",
+    "esbuild": "^0.15.12",
+    "serverless-dotenv-plugin": "^3.1.0",
+    "serverless-esbuild": "^1.33.0",
+    "serverless-iam-roles-per-function": "^3.2.0",
+    "serverless-offline": "^13.3.0",
+    "serverless-prune-versions": "^1.0.4",
+    "typescript": "^5.8.2"
+  }
+}
