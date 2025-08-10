@@ -469,7 +469,7 @@ async function agentsAPIworkflow() {
     llm: {
       type: 'openai',
       provider: 'openai',
-      model: 'gpt-3.5-turbo-1106',
+      model: 'gpt-4o-mini',
       instructions: 'Your name is Emma, an AI designed to assist with information about Prompt Engineering and RAG',
       template: 'rag-grounded',
     },
