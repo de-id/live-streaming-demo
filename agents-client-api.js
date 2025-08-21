@@ -17,7 +17,7 @@ let sessionClientAnswer;
 let statsIntervalId;
 let videoIsPlaying;
 let lastBytesReceived;
-let agentId;
+const agentId = "v2_agt_I5uz3UHz";
 let chatId;
 
 const videoElement = document.getElementById('video-element');
@@ -110,7 +110,7 @@ function onIceCandidate(event) {
     const { candidate, sdpMid, sdpMLineIndex } = event.candidate;
 
     // WEBRTC API CALL 3 - Submit network information
-    fetch(`${DID_API.url}/${DID_API.service}/streams/${streamId}/ice`, {
+    fetch(`${DID_API.url}/agents/${agentId}/streams/${streamId}/ice`, {
       method: 'POST',
       headers: {
         Authorization: `Basic ${DID_API.key}`,
@@ -269,11 +269,12 @@ async function fetchWithRetries(url, options, retries = 1) {
 
 const connectButton = document.getElementById('connect-button');
 connectButton.onclick = async () => {
-  if (agentId == '' || agentId === undefined) {
-    return alert(
-      "1. Click on the 'Create new Agent with Knowledge' button\n2. Open the Console and wait for the process to complete\n3. Press on the 'Connect' button\n4. Type and send a message to the chat\nNOTE: You can store the created 'agentID' and 'chatId' variables at the bottom of the JS file for future chats"
-    );
-  }
+  console.log("agentId is = ", agentId)
+  // if (agentId == '' || agentId === undefined) {
+  //   return alert(
+  //     "1. Click on the 'Create new Agent with Knowledge' button\n2. Open the Console and wait for the process to complete\n3. Press on the 'Connect' button\n4. Type and send a message to the chat\nNOTE: You can store the created 'agentID' and 'chatId' variables at the bottom of the JS file for future chats"
+  //   );
+  // }
 
   if (peerConnection && peerConnection.connectionState === 'connected') {
     return;
@@ -282,14 +283,14 @@ connectButton.onclick = async () => {
   closePC();
 
   // WEBRTC API CALL 1 - Create a new stream
-  const sessionResponse = await fetchWithRetries(`${DID_API.url}/${DID_API.service}/streams`, {
+  const sessionResponse = await fetchWithRetries(`${DID_API.url}/agents/${agentId}/streams`, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${DID_API.key}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg',
+      //source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg',
     }),
   });
 
@@ -306,7 +307,7 @@ connectButton.onclick = async () => {
   }
 
   // WEBRTC API CALL 2 - Start a stream
-  const sdpResponse = await fetch(`${DID_API.url}/${DID_API.service}/streams/${streamId}/sdp`, {
+  const sdpResponse = await fetch(`${DID_API.url}/agents/${agentId}/streams/${streamId}/sdp`, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${DID_API.key}`,
@@ -317,6 +318,21 @@ connectButton.onclick = async () => {
       session_id: sessionId,
     }),
   });
+
+
+  const chat_response = await fetch(`${DID_API.url}/agents/${agentId}/chat`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${DID_API.key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      //source_url: 'https://create-images-results.d-id.com/DefaultPresenters/Emma_f/v1_image.jpeg',
+    }),
+  })
+  const chat = await chat_response.json()
+  chatId = chat.id
+  console.log('chat_response ID', chatId);
 };
 
 const startButton = document.getElementById('start-button');
@@ -365,7 +381,7 @@ startButton.onclick = async () => {
 
 const destroyButton = document.getElementById('destroy-button');
 destroyButton.onclick = async () => {
-  await fetch(`${DID_API.url}/${DID_API.service}/streams/${streamId}`, {
+  await fetch(`${DID_API.url}/agents/${agentId}/streams/${streamId}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Basic ${DID_API.key}`,
@@ -469,7 +485,7 @@ async function agentsAPIworkflow() {
     llm: {
       type: 'openai',
       provider: 'openai',
-      model: 'gpt-3.5-turbo-1106',
+      model: 'gpt-35-turbo',
       instructions: 'Your name is Emma, an AI designed to assist with information about Prompt Engineering and RAG',
       template: 'rag-grounded',
     },
