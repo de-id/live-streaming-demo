@@ -240,6 +240,7 @@ function onIceCandidate(event) {
         candidate,
         sdpMid,
         sdpMLineIndex,
+        presenter_type: PRESENTER_TYPE,
       },
     });
   } else {
