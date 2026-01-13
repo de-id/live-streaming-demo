@@ -210,6 +210,7 @@ destroyButton.onclick = async () => {
     payload: {
       session_id: sessionId,
       stream_id: streamId,
+      presenter_type: PRESENTER_TYPE,
     },
   };
   sendMessage(ws, streamMessage);
@@ -490,6 +491,7 @@ async function connectToWebSocket(url, token) {
 
 function sendMessage(ws, message) {
   if (ws.readyState === WebSocket.OPEN) {
+    console.log('sending message::', message.type);
     ws.send(JSON.stringify(message));
   } else {
     console.error('WebSocket is not open. Cannot send message.');
