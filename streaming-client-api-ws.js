@@ -491,7 +491,6 @@ async function connectToWebSocket(url, token) {
 
 function sendMessage(ws, message) {
   if (ws.readyState === WebSocket.OPEN) {
-    console.log('sending message::', message.type);
     ws.send(JSON.stringify(message));
   } else {
     console.error('WebSocket is not open. Cannot send message.');
