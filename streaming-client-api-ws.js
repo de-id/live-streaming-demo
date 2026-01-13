@@ -210,6 +210,7 @@ destroyButton.onclick = async () => {
     payload: {
       session_id: sessionId,
       stream_id: streamId,
+      presenter_type: PRESENTER_TYPE,
     },
   };
   sendMessage(ws, streamMessage);
